@@ -78,4 +78,15 @@ fig.update_traces(mode="lines+markers+text", textposition="top center")
 
 st.plotly_chart(fig)
 
+# -----------------------------
+# MATRIZ DE N PASSOS
+# -----------------------------
+st.header("5. Matriz de Transição de n Passos")
+
+n = st.slider("Escolha n para calcular P^n", 1, 50, 5)
+P_n = np.linalg.matrix_power(P, n)
+
+st.write(f"Matriz de transição de {n} passos (P^{n}):")
+st.dataframe(P_n)
+st.write("Interpretação: Se você partir do estado i, essas são as probabilidades de estar em cada estado depois de n passos!")
 st.success("Simulação concluída!")
