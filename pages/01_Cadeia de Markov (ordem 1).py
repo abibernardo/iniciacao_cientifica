@@ -137,7 +137,7 @@ if sec == 'Simulação':
         X.append(proximo)  # Adiciona o estado atual a lista
 
     indices = list(range(T))
-    fig = px.scatter(x=indices, y=X, text=X, title="Trajetória da Cadeia de Markov",
+    fig = px.scatter(x=indices, y=X, text=X, title=" ",
                      labels={"x": "Tempo (t)", "y": "Estado"})
     fig.update_traces(mode="lines+markers+text", textposition="top center")
 
