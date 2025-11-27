@@ -7,7 +7,7 @@ import plotly.express as px
 # -----------------------------
 st.title("Simulação de Cadeia de Markov de Primeira Ordem")
 st.markdown("""
-Esta aplicação demonstra passo a passo como uma **Cadeia de Markov de primeira ordem** funciona.
+Passo a passo como uma **Cadeia de Markov de primeira ordem** funciona.
 
 A dinâmica segue:
 - Escolher o primeiro estado usando a **distribuição inicial**.
