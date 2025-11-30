@@ -24,12 +24,15 @@ if "sec" not in st.session_state:
 # Cria as colunas para o layout horizontal
 col1, col2 = st.columns(2)
 
+
 # Funções de callback para manter o estado
 def set_simul():
     st.session_state.sec = "Simulação"
 
+
 def set_inter():
     st.session_state.sec = "Simulação interativa"
+
 
 # Cria botões estilizados (agora persistentes)
 with col1:
@@ -45,7 +48,6 @@ with col2:
         use_container_width=True,
         on_click=set_inter
     )
-
 
 # Valor final (persistente)
 sec = st.session_state.sec
@@ -63,15 +65,15 @@ if sec == 'Simulação':
     st.code(
         """
         estados = ["A", "B", "C"] 
-    
+
         pi = np.array([0.5, 0.3, 0.2]) 
-    
+
         P = np.array([
         [0.7, 0.2, 0.1],
         [0.3, 0.4, 0.3],
         [0.2, 0.3, 0.5]
         ])
-    
+
         T = 20
         """
     )
@@ -146,10 +148,10 @@ if sec == 'Simulação':
 
 elif sec == 'Simulação interativa':
 
-    st.header("Parâmetros Interativos")
+    st.subheader("Número de estados")
 
-# Quantidade de estados
-    m = st.number_input("Número de estados", 2, 8, 3)
+    # Quantidade de estados
+    m = st.number_input(" ", 2, 8, 3)
 
     # -----------------------------
     # NOME DOS ESTADOS
@@ -198,7 +200,7 @@ elif sec == 'Simulação interativa':
     P = np.zeros((m, m))
 
     for i in range(m):
-        st.markdown(f"**Linha: estado atual = {estados[i]}**")
+        #st.markdown(f"**Linha: estado atual = {estados[i]}**")
 
         # criar colunas (até 4 por linha)
         cols_row = st.columns(min(m, 4))
@@ -257,7 +259,6 @@ elif sec == 'Simulação interativa':
     st.header("Simulação da Cadeia")
     T = st.slider("Número de passos (T)", 5, 300, 20)
 
-
     # ------------------------
     # SIMULAÇÃO
     # ------------------------
@@ -282,8 +283,6 @@ elif sec == 'Simulação interativa':
     fig.update_traces(mode="lines+markers+text", textposition="top center")
     st.plotly_chart(fig)
 
-
-
     # MATRIZ DE N PASSOS + VISUALIZAÇÃO
     # -----------------------------
     st.divider()
@@ -292,11 +291,9 @@ elif sec == 'Simulação interativa':
     n = st.slider("Escolha n para calcular Pⁿ", 1, 50, 5)
     P_n = np.linalg.matrix_power(P, n)
 
-
     # -----------------------------
     # HEATMAP DE Pⁿ
     # -----------------------------
-
 
     figPn = px.imshow(
         P_n,
@@ -330,4 +327,5 @@ elif sec == 'Simulação interativa':
 
     st.plotly_chart(figPn, use_container_width=True)
 
-    st.info("Interpretação: Pⁿ[i, j] é a probabilidade de estar no estado j depois de n passos, partindo do estado i. Com n alto, probabilidades convergem para distribuição estacionária.")
+    st.info(
+        "Interpretação: Pⁿ[i, j] é a probabilidade de estar no estado j depois de n passos, partindo do estado i. Com n alto, probabilidades convergem para distribuição estacionária.")
