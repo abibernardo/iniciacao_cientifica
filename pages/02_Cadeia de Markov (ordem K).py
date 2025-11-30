@@ -15,7 +15,7 @@ o próximo estado depende dos **K últimos estados**.
 # ---------------------------------------------------------
 # MENU
 # ---------------------------------------------------------
-st.markdown("### Seção")
+
 
 if "sec" not in st.session_state:
     st.session_state.sec = "Simulação"
@@ -39,7 +39,7 @@ st.divider()
 # ---------------------------------------------------------
 if sec == 'Simulação':
 
-    st.header("📌 Passo a Passo")
+    st.header("Passo a Passo")
     st.markdown("""
     **Definimos:**
     - os estados  
@@ -72,7 +72,7 @@ if sec == 'Simulação':
     )
 
     st.markdown("""
-    Em seguida, **construímos a *árvore* de transição**, que é um dicionário onde:
+    Em seguida, **construímos a *árvore* de contexto**, que é um dicionário onde:
 
    - **Chaves** → Combinações dos últimos K estados (contextos)  
    - **Valores** → Vetor de probabilidade do próximo estado dado o contexto
@@ -127,6 +127,63 @@ if sec == 'Simulação':
             X.append(proximo)
         """
     )
+
+    estados = ["A", "B", "C"]
+    K = 3
+    T = 20
+
+    contextos = list(itertools.product(estados, repeat=K))
+
+    arvore = {}
+    for ctx in contextos:
+        p = np.random.rand(len(estados))
+        p = p / p.sum()
+        arvore[ctx] = p
+
+    pi = np.array([0.5, 0.3, 0.2])
+
+    # Gerar estados iniciais
+    X = [np.random.choice(estados, p=pi) for _ in range(K)]
+
+    caminho = []  # para registrar passo a passo
+
+    # Loop da simulação
+    for t in range(K, T):
+        contexto = tuple(X[-K:])
+        probs = arvore[contexto]
+        proximo = np.random.choice(estados, p=probs)
+        X.append(proximo)
+
+        caminho.append({
+            "Passo": t,
+            "Contexto usado": contexto,
+            "Probabilidades": np.round(probs, 3),
+            "Próximo estado": proximo
+        })
+
+    # -------------------------------------------
+    # GRÁFICO DA TRAJETÓRIA (Cadeia de ordem K)
+    # -------------------------------------------
+
+    st.header("Trajetória Gerada pela Cadeia")
+
+    indices = list(range(T))
+
+    fig = px.scatter(
+        x=indices,
+        y=X,
+        text=X,
+        title=" ",
+        labels={"x": "Tempo (t)", "y": "Estado"},
+    )
+
+    fig.update_traces(
+        mode="lines+markers+text",
+        textposition="top center",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
 
 elif sec == "Simulação interativa":
 
@@ -185,14 +242,12 @@ elif sec == "Simulação interativa":
     # ÁRVORE (TRANSIÇÕES DE ORDEM K)
     # -----------------------------------------------------
     st.divider()
-    st.subheader("Árvore de Probabilidades (Transições de Ordem K)")
+    st.subheader("Árvore de Probabilidades")
 
     contextos = list(itertools.product(estados, repeat=K))
     arvore = {}
 
     for ctx in contextos:
-
-        st.markdown(f"**Contexto: {ctx}**")
         cols_row = st.columns(min(m, 4))
 
         probs = []
@@ -216,26 +271,6 @@ elif sec == "Simulação interativa":
         arvore[ctx] = probs
 
     # -----------------------------------------------------
-    # VISUALIZAÇÃO DA ÁRVORE COMO TREEMAP
-    # -----------------------------------------------------
-    st.divider()
-    st.subheader("Visualização da Árvore de Contextos")
-
-    df_tree = pd.DataFrame({
-        "contexto": [str(ctx) for ctx in arvore.keys()],
-        "pai": ["ROOT"] * len(arvore),
-        "peso": [1] * len(arvore)
-    })
-
-    fig_tree = px.treemap(
-        df_tree,
-        names="contexto",
-        parents="pai",
-        values="peso",
-        title="Estrutura da Árvore de Contextos (Cada Nó Representa um Contexto de Ordem K)"
-    )
-
-    st.plotly_chart(fig_tree, use_container_width=True)
 
     # -----------------------------------------------------
     # SIMULAÇÃO DA CADEIA
@@ -275,23 +310,3 @@ elif sec == "Simulação interativa":
     st.plotly_chart(fig)
 
     # -----------------------------------------------------
-    # GRÁFICO DO CAMINHO NA ÁRVORE
-    # -----------------------------------------------------
-    st.divider()
-    st.header("Caminho Percorrido na Árvore")
-
-    df_path = pd.DataFrame({
-        "contexto": caminho_contextos,
-        "pai": ["ROOT"] * len(caminho_contextos),
-        "peso": [1] * len(caminho_contextos)
-    })
-
-    fig_path = px.treemap(
-        df_path,
-        names="contexto",
-        parents="pai",
-        values="peso",
-        title="Contextos Visitados Durante a Simulação"
-    )
-
-    st.plotly_chart(fig_path, use_container_width=True)
