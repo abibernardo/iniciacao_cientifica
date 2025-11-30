@@ -1,216 +1,183 @@
 import streamlit as st
 import numpy as np
-import itertools
 import plotly.express as px
-import pandas as pd
 
-
-st.title("Cadeia de Markov de Ordem K")
-
+# -----------------------------
+# TÍTULO E INTRODUÇÃO
+# -----------------------------
+st.title("Simulação de Cadeia de Markov de Primeira Ordem")
 st.markdown("""
-Passo a passo de como funciona uma **Cadeia de Markov de ordem K**, onde  
-o próximo estado depende dos **K últimos estados**.
+Passo a passo como uma **Cadeia de Markov de primeira ordem** funciona.
+
+A dinâmica segue:
+- Escolher o primeiro estado usando a **distribuição inicial**.
+- Utilizar a **matriz de transição** para gerar os próximos estados.
+- Visualizar a trajetória gerada.
 """)
 
-# ---------------------------------------------------------
-# MENU
-# ---------------------------------------------------------
+st.markdown("### Seção")
 
-
+# Inicializa o estado
 if "sec" not in st.session_state:
     st.session_state.sec = "Simulação"
 
+# Cria as colunas para o layout horizontal
 col1, col2 = st.columns(2)
 
-with col1:
-    st.button("📄 Simulação", use_container_width=True,
-              on_click=lambda: st.session_state.update(sec="Simulação"))
-with col2:
-    st.button("🎛️ Interativa", use_container_width=True,
-              on_click=lambda: st.session_state.update(sec="Simulação interativa"))
 
+# Funções de callback para manter o estado
+def set_simul():
+    st.session_state.sec = "Simulação"
+
+
+def set_inter():
+    st.session_state.sec = "Simulação interativa"
+
+
+# Cria botões estilizados (agora persistentes)
+with col1:
+    st.button(
+        "📄 Simulação",
+        use_container_width=True,
+        on_click=set_simul
+    )
+
+with col2:
+    st.button(
+        "🎛️ Interativa",
+        use_container_width=True,
+        on_click=set_inter
+    )
+
+
+# Valor final (persistente)
 sec = st.session_state.sec
 
 st.divider()
-
-
-# ---------------------------------------------------------
-# SIMULAÇÃO
-# ---------------------------------------------------------
+# -----------------------------
+# PARÂMETROS
+# -----------------------------
 if sec == 'Simulação':
-
     st.header("Passo a Passo")
     st.markdown("""
-    **Definimos:**
-    - os estados  
-    - a ordem K  
-    - o número de passos T  
+    **Abaixo, define-se respectivamente os estados, as probabilidades iniciais, a matriz de transição e o número de passos da cadeia de markov:**
     """)
 
     st.code(
         """
-        estados = ["A", "B", "C"]
+        estados = ["A", "B", "C"] 
+    
 
-        K = 3  
+        pi = np.array([0.5, 0.3, 0.2]) 
+    
+
+        P = np.array([
+        [0.7, 0.2, 0.1],
+        [0.3, 0.4, 0.3],
+        [0.2, 0.3, 0.5]
+        ])
+    
 
         T = 20
         """
     )
 
     st.markdown("""
-    Agora, criamos uma lista com todas as combinações possíveis de K estados consecutivos —  
-    chamadas de **contextos**.
-
-    O número total de combinações é $$\t{Estados}^K$$
+    **Cria-se a lista X. O primeiro estado é sorteado segundo a distribuição inicial, e adicionado à lista:**
     """)
 
     st.code(
         """
-        contextos = list(itertools.product(estados, repeat=K))
-        # Exemplo para K=2: [("A","A"), ("A","B"), ("A","C"), ("B","A"), ("B","B")..., ("C","C")]
-        """
-    )
-
-    st.markdown("""
-    Em seguida, **construímos a *árvore* de contexto**, que é um dicionário onde:
-
-   - **Chaves** → Combinações dos últimos K estados (contextos)  
-   - **Valores** → Vetor de probabilidade do próximo estado dado o contexto
-    """)
-
-    st.code(
-        """
-        arvore = {}
-
-        for ctx in contextos:
-            p = np.random.rand(len(estados))  # Gera vetor de probabilidade p para estados
-            p = p / p.sum()  # normaliza p
-            arvore[ctx] = p  # adiciona contexto à árvore e atribúi probabilidade p
-
-        """
-    )
-
-    st.markdown("""
-    Agora:
-    - Definimos probabilidades iniciais pi  
-    - Criamos a lista X  
-    - Sorteamos os primeiros K estados de forma independente  
-    - Adicionamos esses K estados iniciais à lista X  
-    """)
-
-    st.code(
-        """
-        pi = np.array([0.5, 0.3, 0.2])
-
         X = []
-        for _ in range(K):
-            X.append(np.random.choice(estados, p=pi))
+        X.append(np.random.choice(estados, p=pi))
         """
     )
 
     st.markdown("""
-    **O loop abaixo (do passo K ao passo T):**
+    **O loop abaixo (do passo 1 ao passo T):**
+    - Define o estado atual, que é o último estado adicionado à lista X
+    - Define o index do estado atual (0, 1 ou 2 no nosso caso de 3 estados)
+    - Sorteia o próximo estado, com as probabilidades da linha referente ao estado atual na matriz de transição
+       * por exemplo, se o estado atual é B (segundo index), as probabilidades do próximo estado são referentes a segunda linha de P.
+    - Adiciona o estado sorteado à lista X.
 
-    - Define o contexto atual (últimos K estados na lista X)  
-    - Busca na árvore o vetor de probabilidade correspondente ao contexto 
-    - Sorteia o próximo estado baseado no vetor acima
-    - Adiciona à lista X  
-    - Repete  
     """)
 
     st.code(
         """
-        for t in range(K, T):
-            contexto = tuple(X[-K:]) 
-            probs = arvore[contexto] 
-            proximo = np.random.choice(estados, p=probs) 
+        for t in range(1, T):
+            estado_atual = X[-1]
+            i = estados.index(estado_atual)
+            proximo = np.random.choice(estados, p=P[i])
             X.append(proximo)
         """
     )
 
     estados = ["A", "B", "C"]
-    K = 3
-    T = 20
 
-    contextos = list(itertools.product(estados, repeat=K))
-
-    arvore = {}
-    for ctx in contextos:
-        p = np.random.rand(len(estados))
-        p = p / p.sum()
-        arvore[ctx] = p
+    m = len(estados)
 
     pi = np.array([0.5, 0.3, 0.2])
 
-    # Gerar estados iniciais
-    X = [np.random.choice(estados, p=pi) for _ in range(K)]
+    P = np.array([
+        [0.7, 0.2, 0.1],
+        [0.3, 0.4, 0.3],
+        [0.2, 0.3, 0.5]
+    ])
 
-    caminho = []  # para registrar passo a passo
+    # -----------------------------
+    # SIMULAÇÃO
+    # -----------------------------
+    st.header("Simulação da Cadeia")
 
-    # Loop da simulação
-    for t in range(K, T):
-        contexto = tuple(X[-K:])
-        probs = arvore[contexto]
-        proximo = np.random.choice(estados, p=probs)
-        X.append(proximo)
+    T = st.slider("Número de passos (T)", 5, 200, 20)
 
-        caminho.append({
-            "Passo": t,
-            "Contexto usado": contexto,
-            "Probabilidades": np.round(probs, 3),
-            "Próximo estado": proximo
-        })
+    X = []
+    X.append(np.random.choice(estados, p=pi))  # primeiro estado
 
-    # -------------------------------------------
-    # GRÁFICO DA TRAJETÓRIA (Cadeia de ordem K)
-    # -------------------------------------------
-
-    st.header("Trajetória Gerada pela Cadeia")
+    for t in range(1, T):
+        estado_atual = X[-1]  # Olhe onde a cadeia está (estado atual); último elemento de X
+        i = estados.index(estado_atual)  # index do estado atual
+        proximo = np.random.choice(estados, p=P[
+            i])  # Escolhe o próximo estado com as probabilidades da LINHA da matriz de transição correspondente ao estado atual
+        X.append(proximo)  # Adiciona o estado atual a lista
 
     indices = list(range(T))
+    fig = px.scatter(x=indices, y=X, text=X, title=" ",
+                     labels={"x": "Tempo (t)", "y": "Estado"})
+    fig.update_traces(mode="lines+markers+text", textposition="top center")
 
-    fig = px.scatter(
-        x=indices,
-        y=X,
-        text=X,
-        title=" ",
-        labels={"x": "Tempo (t)", "y": "Estado"},
-    )
-
-    fig.update_traces(
-        mode="lines+markers+text",
-        textposition="top center",
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
 
-elif sec == "Simulação interativa":
+elif sec == 'Simulação interativa':
 
-    # -----------------------------------------------------
-    # NÚMERO DE ESTADOS
-    # -----------------------------------------------------
+    st.header("Parâmetros Interativos")
     st.subheader("Número de estados")
+
+# Quantidade de estados
+    m = st.number_input("Número de estados", 2, 8, 3)
+    # Quantidade de estados
     m = st.number_input(" ", 2, 8, 3)
 
-    # -----------------------------------------------------
+    # -----------------------------
     # NOME DOS ESTADOS
-    # -----------------------------------------------------
+    # -----------------------------
     st.divider()
     st.subheader("Nomes dos estados")
 
     estados = []
-    cols = st.columns(min(m, 4))
+    cols = st.columns(min(m, 4))  # até 4 colunas por linha
 
     for i in range(m):
         with cols[i % 4]:
             estados.append(
-                st.text_input(f"Estado {i+1}", value=f"E{i+1}", key=f"estado_{i}")
+                st.text_input(f"Estado {i + 1}", value=f"E{i + 1}", key=f"estado_{i}")
             )
 
-    # -----------------------------------------------------
+    # -----------------------------
     # DISTRIBUIÇÃO INICIAL π
-    # -----------------------------------------------------
+    # -----------------------------
     st.divider()
     st.subheader("Distribuição Inicial (π)")
 
@@ -220,93 +187,159 @@ elif sec == "Simulação interativa":
     for i, est in enumerate(estados):
         with cols_pi[i % 4]:
             pi_vals.append(
-                st.number_input(f"P({est})", 0.0, 1.0, 1.0/m, key=f"pi_{i}")
+                st.number_input(f"P({est})", 0.0, 1.0, 1.0 / m, key=f"pi_{i}")
             )
 
     pi = np.array(pi_vals)
+
     if pi.sum() == 0:
         st.error("A soma de π não pode ser zero.")
         st.stop()
 
     pi = pi / pi.sum()
 
-    # -----------------------------------------------------
-    # ORDEM K DA CADEIA
-    # -----------------------------------------------------
+    # -----------------------------
+    # MATRIZ DE TRANSIÇÃO P
+    # -----------------------------
     st.divider()
-    st.subheader("Ordem da Cadeia (K)")
+    st.subheader("Matriz de Transição (P)")
 
-    K = st.number_input("Escolha a ordem K", 1, 5, 2)
+    P = np.zeros((m, m))
 
-    # -----------------------------------------------------
-    # ÁRVORE (TRANSIÇÕES DE ORDEM K)
-    # -----------------------------------------------------
-    st.divider()
-    st.subheader("Árvore de Probabilidades")
+    for i in range(m):
+        st.markdown(f"**Linha: estado atual = {estados[i]}**")
+        #st.markdown(f"**Linha: estado atual = {estados[i]}**")
 
-    contextos = list(itertools.product(estados, repeat=K))
-    arvore = {}
-
-    for ctx in contextos:
+        # criar colunas (até 4 por linha)
         cols_row = st.columns(min(m, 4))
 
-        probs = []
+        row_vals = []
         for j in range(m):
             with cols_row[j % 4]:
-                probs.append(
+                row_vals.append(
                     st.number_input(
-                        f"P({ctx} → {estados[j]})",
+                        f"P({estados[i]} → {estados[j]})",
                         0.0, 1.0,
-                        1.0/m,
-                        key=f"ctx_{'_'.join(ctx)}_{j}"
+                        1.0 / m,
+                        key=f"p_{i}_{j}"
                     )
                 )
 
-        probs = np.array(probs)
-        if probs.sum() == 0:
-            st.error(f"As probabilidades do contexto {ctx} não podem somar zero.")
+        row = np.array(row_vals)
+
+        if row.sum() == 0:
+            st.error(f"A linha do estado {estados[i]} não pode somar zero.")
             st.stop()
 
-        probs = probs / probs.sum()
-        arvore[ctx] = probs
+        P[i] = row / row.sum()
+    # -----------------------------
+    # VISUALIZAÇÃO DA MATRIZ DE TRANSIÇÃO
+    # -----------------------------
 
-    # -----------------------------------------------------
+    figP = px.imshow(
+        P,
+        text_auto=".2f",
+        color_continuous_scale="Blues",
+        labels=dict(x="Próximo estado", y="Estado atual", color="Probabilidade"),
+        x=estados,
+        y=estados,
+        aspect="auto",
+    )
 
-    # -----------------------------------------------------
-    # SIMULAÇÃO DA CADEIA
-    # -----------------------------------------------------
+    figP.update_layout(
+        title=" ",
+        xaxis_title="Próximo estado",
+        yaxis_title="Estado atual",
+        font=dict(size=14),
+        coloraxis_colorbar=dict(
+            thickness=20,
+            len=0.75,
+            title="Probabilidade",
+            title_side="right"
+        ),
+    )
+
+    figP.update_xaxes(side="top")
     st.divider()
-    st.header("Simulação da Cadeia")
+    st.plotly_chart(figP, use_container_width=True)
 
+    # Número de passos
+    st.header("Simulação da Cadeia")
     T = st.slider("Número de passos (T)", 5, 300, 20)
 
-    # SORTEIO DOS K PRIMEIROS ESTADOS
-    X = []
-    for _ in range(K):
-        X.append(np.random.choice(estados, p=pi))
 
+    # ------------------------
     # SIMULAÇÃO
-    caminho_contextos = []
+    # ------------------------
+    X = []
+    X.append(np.random.choice(estados, p=pi))
 
-    for t in range(K, T):
-        contexto = tuple(X[-K:])
-        probs = arvore[contexto]
-        proximo = np.random.choice(estados, p=probs)
-        caminho_contextos.append(str(contexto))
+    for t in range(1, T):
+        estado_atual = X[-1]
+        idx = estados.index(estado_atual)
+        proximo = np.random.choice(estados, p=P[idx])
         X.append(proximo)
 
-    # -----------------------------------------------------
-    # PLOT DA TRAJETÓRIA
-    # -----------------------------------------------------
+    # Plot
     indices = list(range(T))
     fig = px.scatter(
         x=indices,
         y=X,
         text=X,
-        title="Trajetória da Cadeia de Ordem K",
+        title=" ",
         labels={"x": "Tempo (t)", "y": "Estado"},
     )
     fig.update_traces(mode="lines+markers+text", textposition="top center")
     st.plotly_chart(fig)
 
-    # -----------------------------------------------------
+
+
+    # MATRIZ DE N PASSOS + VISUALIZAÇÃO
+    # -----------------------------
+    st.divider()
+    st.header("Matriz de Transição de n Passos")
+
+    n = st.slider("Escolha n para calcular Pⁿ", 1, 50, 5)
+    P_n = np.linalg.matrix_power(P, n)
+
+
+    # -----------------------------
+    # HEATMAP DE Pⁿ
+    # -----------------------------
+
+
+    figPn = px.imshow(
+        P_n,
+        text_auto=".3f",
+        color_continuous_scale="Viridis",
+        labels=dict(
+            x="Estado no futuro",
+            y="Estado atual",
+            color="Probabilidade"
+        ),
+        x=estados,
+        y=estados,
+        aspect="auto",
+    )
+
+    figPn.update_layout(
+        title=f" ",
+        xaxis_title="Próximo estado em n passos",
+        yaxis_title="Estado atual",
+        font=dict(size=14),
+        coloraxis_colorbar=dict(
+            thickness=18,
+            len=0.75,
+            title="Probabilidade",
+            title_side="right",
+        ),
+    )
+
+    # Coloca os nomes das colunas em cima
+    figPn.update_xaxes(side="top")
+
+    st.plotly_chart(figPn, use_container_width=True)
+
+    st.info("Interpretação: Pⁿ[i, j] é a probabilidade de estar no estado j depois de n passos, partindo do estado i. Com n alto, probabilidades convergem para distribuição estacionária.")
+    st.info(
+        "Interpretação: Pⁿ[i, j] é a probabilidade de estar no estado j depois de n passos, partindo do estado i. Com n alto, probabilidades convergem para distribuição estacionária.")
