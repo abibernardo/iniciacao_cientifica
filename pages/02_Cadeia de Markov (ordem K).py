@@ -18,14 +18,18 @@ o próximo estado depende dos **K últimos estados**.
 
 
 if "sec" not in st.session_state:
-    st.session_state.sec = "Simulação"
+    st.session_state.sec = "Dicionário"
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.button("📄 Simulação", use_container_width=True,
-              on_click=lambda: st.session_state.update(sec="Simulação"))
+    st.button("📄 Dicionário", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="Dicionário"))
 with col2:
+    st.button("📄 Árvore", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="Árvore"))
+
+with col3:
     st.button("🎛️ Interativa", use_container_width=True,
               on_click=lambda: st.session_state.update(sec="Simulação interativa"))
 
@@ -37,7 +41,7 @@ st.divider()
 # ---------------------------------------------------------
 # SIMULAÇÃO
 # ---------------------------------------------------------
-if sec == 'Simulação':
+if sec == 'Dicionário':
 
     st.header("Passo a Passo")
     st.markdown("""
@@ -183,6 +187,10 @@ if sec == 'Simulação':
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+
+elif sec == "Árvore":
+    st.header("Passo a Passo (Versão com Dicionários Aninhados)")
 
 
 elif sec == "Simulação interativa":
