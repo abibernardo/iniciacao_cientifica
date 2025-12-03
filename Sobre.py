@@ -1,61 +1,76 @@
 import streamlit as st
 
-# Configurações gerais do app
 st.set_page_config(
     page_title="Iniciação Científica",
     page_icon="📊",
     layout="wide"
 )
 
-# ---- Estilo CSS leve e profissional ----
+# --- Estilo CSS personalizado ---
 st.markdown("""
 <style>
-/* Caixa central */
-.presentation-box {
-    background-color: rgba(255, 255, 255, 0.85);
-    padding: 2.5rem;
-    border-radius: 18px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    backdrop-filter: blur(4px);
+
+.main-title {
+    font-size: 42px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 40px;
 }
 
-/* Título principal */
-h1 {
-    font-weight: 700 !important;
-    font-size: 2.3rem !important;
-}
-
-/* Subtítulo */
 .subtitle {
-    font-size: 1.1rem;
-    color: #4A4A4A;
+    font-size: 22px;
+    font-weight: 400;
+    text-align: center;
+    color: #555;
     margin-top: -10px;
 }
 
-/* Nome do autor */
-.author {
-    font-size: 1.2rem;
-    font-style: italic;
+.author-box {
+    text-align: center;
+    font-size: 18px;
     margin-top: 25px;
+    color: #444;
+}
+
+.divider {
+    height: 2px;
+    margin: 35px auto 25px auto;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(90,90,90,0.4) 50%, rgba(0,0,0,0) 100%);
+    width: 70%;
+    border-radius: 2px;
+}
+
+.description {
+    text-align: center;
+    font-size: 19px;
+    max-width: 850px;
+    margin: 0 auto;
+    line-height: 1.5;
     color: #333;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
 
-# ---- Conteúdo da apresentação ----
-st.markdown("<div class='presentation-box'>", unsafe_allow_html=True)
+# --- Conteúdo visual ---
+st.markdown("<div class='main-title'>Iniciação Científica – Unicamp</div>", unsafe_allow_html=True)
 
-st.markdown("<h1>Avaliação do Impacto da Prior na Inferência para Árvores de Contexto Bayesianas</h1>", unsafe_allow_html=True)
+st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-
-
-# Espaço reservado para você colocar seu nome
 st.markdown("""
-<div class="author">
-<b>Autor:</b> Bernardo Abib 
-<b>Orientador:</b> Victor Freguglia
+<div class='subtitle'>
+Avaliação do Impacto da Prior na Inferência para Árvores de Contexto Bayesianas
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+<div class='author-box'>
+<strong>Autor:</strong> Bernardo Abib  
+<br>
+<strong>Orientador:</strong> Victor Freguglia
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
