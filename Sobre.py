@@ -54,7 +54,7 @@ st.markdown("""
 
 
 # --- Conteúdo visual ---
-st.markdown("<div class='main-title'>Iniciação Científica – Unicamp</div>", unsafe_allow_html=True)
+st.markdown("<div class='main-title'>Iniciação Científica – IMECC/Unicamp</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
