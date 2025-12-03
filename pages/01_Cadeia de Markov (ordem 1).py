@@ -15,7 +15,6 @@ A dinâmica segue:
 - Visualizar a trajetória gerada.
 """)
 
-st.markdown("### Seção")
 
 # Inicializa o estado
 if "sec" not in st.session_state:
