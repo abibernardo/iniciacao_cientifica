@@ -1,19 +1,13 @@
 [theme]
-base = "light"  # Visual limpo e profissional
-primaryColor = "#0056B3"  # Azul acadêmico (links, botões, destaques)
-backgroundColor = "#F8F9FB"  # Fundo claro e suave
-secondaryBackgroundColor = "#FFFFFF"  # Cards e containers com fundo branco
-textColor = "#1C1C1C"  # Texto quase preto para alta legibilidade
-font = "sans serif"  # Moderna e apropriada para ambientes acadêmicos
+base = "light"
 
-[browser]
-gatherUsageStats = false  # Boa prática para apps acadêmicos (evita envio de stats)
+# Destaque moderno, profissional e com cor
+primaryColor = "#4A37E2"  # Azul-violeta moderno (ótimo para apps científicos)
+secondaryBackgroundColor = "#FFFFFF"  # Cards e sidebar mais limpos
+backgroundColor = "#F3F4F7"  # Fundo suave de dashboard
 
-[server]
-headless = true
-enableCORS = false
-enableXsrfProtection = true
+# Forte contraste e boa leitura
+textColor = "#1A1A1A"
 
-[logger]
-level = "info"
-
+# Estilo de fonte moderno
+font = "sans serif"
