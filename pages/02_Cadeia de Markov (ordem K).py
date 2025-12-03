@@ -198,9 +198,13 @@ elif sec == "Árvore":
     st.markdown("""
     Para representar a cadeia de Markov de ordem K em forma de **árvore**, ao invés de criar um dicionário gigante com 
     $$\t{Estados}^K$$ chaves, podemos usar **dicionários aninhados**. Usamos K dicionários aninhados - onde cada nível do dicionário 
-    corresponde a um passo da memória da cadeia, andando 'de fora pra dentro'. Cada 'caminho' de chaves representa um contexto e cada folha 
-    contém o vetor de probabilidades usado para gerar o próximo estado:
+    corresponde a um passo da memória da cadeia, andando 'de fora pra dentro'.
     """)
+
+    st.markdown("""
+        Cada 'caminho' de chaves representa um contexto e cada folha 
+        contém o vetor de probabilidades usado para gerar o próximo estado:
+        """)
 
     st.code('''
     arvore = {
