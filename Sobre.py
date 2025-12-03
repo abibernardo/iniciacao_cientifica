@@ -60,7 +60,7 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 st.markdown("""
 <div class='subtitle'>
-Avaliação do Impacto da Prior na Inferência para Árvores de Contexto Bayesianas
+Avaliação do Impacto da Priori na Inferência para Árvores de Contexto Bayesianas
 </div>
 """, unsafe_allow_html=True)
 
