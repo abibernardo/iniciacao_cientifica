@@ -1,5 +1,38 @@
 import streamlit as st
 
+st.markdown("""
+<style>
+    /* MENU LATERAL (nav) */
+    [data-testid="stSidebarNav"] {
+        background-color: #1E2A38;
+        padding-top: 20px;
+    }
+
+    /* Textos do menu */
+    [data-testid="stSidebarNav"] a {
+        color: #FFFFFF !important;
+        font-weight: 500;
+    }
+
+    /* Item selecionado */
+    [data-testid="stSidebarNav"] a:hover {
+        background-color: #2E4053 !important;
+        color: #FFFFFF !important;
+    }
+
+    [data-testid="stSidebarNav"]::before {
+        content: "📘 Minha IC – Unicamp";
+        display: block;
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        margin-left: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 st.set_page_config(
     page_title="Iniciação Científica",
     page_icon="📊",
