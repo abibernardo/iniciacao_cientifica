@@ -154,9 +154,8 @@ elif sec == 'Simulação interativa':
     st.subheader("Número de estados")
 
     # Quantidade de estados
-    m = st.number_input("Número de estados", 2, 8, 3)
-    # Quantidade de estados
     m = st.number_input(" ", 2, 8, 3)
+
 
     # -----------------------------
     # NOME DOS ESTADOS
