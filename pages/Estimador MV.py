@@ -31,6 +31,8 @@ for estado in estados:
 
 
 def log_verossimilhanca_markov(sequencia, k):
+
+    # Calcula contagens
     contagens_transicao = {}
     total_contexto = {}
 
@@ -44,14 +46,19 @@ def log_verossimilhanca_markov(sequencia, k):
 
         contagens_transicao[contexto][proximo_estado] = contagens_transicao[contexto].get(proximo_estado, 0) + 1
         total_contexto[contexto] += 1
-
+    # calcula verossimilhança
     ell = 0.0
-    for contexto, contagens in contagens_transicao.items():
+    for contexto, contagens in contagens_transicao.items(): # elementos do .items "Desempacota" Dicionário; não é um loop duplo!!!
         Nk_c = total_contexto[contexto]
-        for Nk_ca in contagens.values():
+        for Nk_ca in contagens.values():  # .values pega apenas a contagem
             ell += Nk_ca * math.log(Nk_ca / Nk_c)
 
     return ell
+
+# loops duplos acima correspondem a:
+# Para cada contexto c que apareceu na sequência,
+# para cada estado 𝑎 tal que 𝑁𝑐,𝑎 > 0
+# somar 𝑁𝑐,𝑎 * log⁡(𝑁𝑐,𝑎/𝑁𝑐)
 
 ell_k   = log_verossimilhanca_markov(sequencia, k)
 ell_k1  = log_verossimilhanca_markov(sequencia, k+1)
