@@ -175,7 +175,38 @@ if sec == 'Estimador de Máxima Verossimilhança':
 
     - $N_{c,a}$ é o número de vezes que o estado $a$ ocorre após o contexto $c$;
     - $N_c = \\sum_a N_{c,a}$ é o número total de ocorrências do contexto $c$.
+    
+    A função para calcular a log-verossimilhança de uma cadeia de ordem k foi definida como:
     """)
+
+    st.code("""
+        def log_verossimilhanca_markov(sequencia, k):
+
+        # Calcula contagens:
+        contagens_transicao = {}
+        total_contexto = {}
+
+        for t in range(k, len(sequencia)):
+            contexto = tuple(sequencia[t-k:t])
+            proximo_estado = sequencia[t]
+
+            if contexto not in contagens_transicao:
+                contagens_transicao[contexto] = {}
+                total_contexto[contexto] = 0
+
+            contagens_transicao[contexto][proximo_estado] = contagens_transicao[contexto].get(proximo_estado, 0) + 1
+            total_contexto[contexto] += 1
+
+        # calcula verossimilhança:
+        ell = 0.0
+        for contexto, contagens in contagens_transicao.items(): # elementos do .items "Desempacota" Dicionário; não é um loop duplo!!!
+            Nk_c = total_contexto[contexto]
+            for Nk_ca in contagens.values():  # .values pega apenas a contagem
+                ell += Nk_ca * math.log(Nk_ca / Nk_c)
+
+        return ell
+            """, language="python")
+
 
 
 
@@ -225,39 +256,8 @@ elif sec == "Teste de Razão de Verossimilhança":
 
     st.markdown(r"""
         ## Computacional
-        A função usada para calcular a log-verossimilhança da cadeia de ordem k foi definida desta forma:
-""")
-
-    st.code("""
-    def log_verossimilhanca_markov(sequencia, k):
-
-    # Calcula contagens:
-    contagens_transicao = {}
-    total_contexto = {}
-
-    for t in range(k, len(sequencia)):
-        contexto = tuple(sequencia[t-k:t])
-        proximo_estado = sequencia[t]
-
-        if contexto not in contagens_transicao:
-            contagens_transicao[contexto] = {}
-            total_contexto[contexto] = 0
-
-        contagens_transicao[contexto][proximo_estado] = contagens_transicao[contexto].get(proximo_estado, 0) + 1
-        total_contexto[contexto] += 1
         
-    # calcula verossimilhança:
-    ell = 0.0
-    for contexto, contagens in contagens_transicao.items(): # elementos do .items "Desempacota" Dicionário; não é um loop duplo!!!
-        Nk_c = total_contexto[contexto]
-        for Nk_ca in contagens.values():  # .values pega apenas a contagem
-            ell += Nk_ca * math.log(Nk_ca / Nk_c)
-
-    return ell
-        """, language="python")
-
-    st.markdown(r"""
-    Então, o teste de Razão de Verossimilhança para as cadeias de ordem k e de ordem k+1 são montados assim:
+    Usando a função log_verossimilhanca_markov, o teste de Razão de Verossimilhança para as cadeias de ordem k e de ordem k+1 são montados assim:
     """)
 
     st.code("""
@@ -271,6 +271,4 @@ p_value = 1 - chi2.cdf(LR, df=((m-1)*(m**(k+1)) - ((m-1)*(m**k))))
 
 print(p_value)
             """, language="python")
-
-
 
