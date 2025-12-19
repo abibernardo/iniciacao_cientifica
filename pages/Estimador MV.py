@@ -1,12 +1,9 @@
-from pathlib import Path
-import plotly.express as px
-import streamlit as st
+
 import numpy as np
-import pandas as pd
 import math
 from scipy.stats import chi2
 
-np.random.seed(42)
+#np.random.seed(42)
 
 estados = ["A", "B", "C"]
 n = 2000
@@ -33,7 +30,7 @@ for estado in estados:
 
 
 
-def log_verossimilhanca_markov(sequencia, estados, k):
+def log_verossimilhanca_markov(sequencia, k):
     contagens_transicao = {}
     total_contexto = {}
 
@@ -45,8 +42,7 @@ def log_verossimilhanca_markov(sequencia, estados, k):
             contagens_transicao[contexto] = {}
             total_contexto[contexto] = 0
 
-        contagens_transicao[contexto][proximo_estado] = \
-            contagens_transicao[contexto].get(proximo_estado, 0) + 1
+        contagens_transicao[contexto][proximo_estado] = contagens_transicao[contexto].get(proximo_estado, 0) + 1
         total_contexto[contexto] += 1
 
     ell = 0.0
@@ -57,13 +53,12 @@ def log_verossimilhanca_markov(sequencia, estados, k):
 
     return ell
 
-ell_k   = log_verossimilhanca_markov(sequencia, estados, k)
-ell_k1  = log_verossimilhanca_markov(sequencia, estados, k+1)
+ell_k   = log_verossimilhanca_markov(sequencia, k)
+ell_k1  = log_verossimilhanca_markov(sequencia, k+1)
 
 LR = 2 * (ell_k1 - ell_k)
 
-
-
-p_value = 1 - chi2.cdf(LR, df=(len(estados)-1)*(len(estados)**k))
+m = len(estados)
+p_value = 1 - chi2.cdf(LR, df=((len(estados)-1)*(len(estados)**(k+1)) - ((len(estados)-1)*(len(estados)**k))))
 
 print(p_value)
