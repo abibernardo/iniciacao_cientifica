@@ -176,7 +176,7 @@ if sec == 'Estimador de Máxima Verossimilhança':
     - $N_{c,a}$ é o número de vezes que o estado $a$ ocorre após o contexto $c$;
     - $N_c = \\sum_a N_{c,a}$ é o número total de ocorrências do contexto $c$.
     
-    A função para calcular a log-verossimilhança de uma cadeia de ordem k foi definida como:
+    Usando a lógica de contagem acima, a função para calcular a log-verossimilhança de uma cadeia de ordem k foi definida como:
     """)
 
     st.code("""
