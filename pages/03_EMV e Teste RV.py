@@ -27,7 +27,6 @@ with col2:
     st.button("Teste de Razão de Verossimilhança", use_container_width=True,
               on_click=lambda: st.session_state.update(sec="Teste de Razão de Verossimilhança"))
 
-
 sec = st.session_state.sec
 
 st.divider()
@@ -125,7 +124,7 @@ if sec == 'Estimador de Máxima Verossimilhança':
 
         # Incrementa a contagem da transição contexto -> proximo_estado
         # Se o estado ainda não apareceu após esse contexto, começa em zero
-        
+
         contagens_transicao[contexto][proximo_estado] = (
             contagens_transicao[contexto].get(proximo_estado, 0) + 1
         )
@@ -159,10 +158,9 @@ if sec == 'Estimador de Máxima Verossimilhança':
     $$
     """)
 
-
     st.markdown("""
     Que pode ser escrita como a log-verossimilhança:
-    
+
     $$
     \\ell(\\theta)
     =
@@ -175,40 +173,45 @@ if sec == 'Estimador de Máxima Verossimilhança':
 
     - $N_{c,a}$ é o número de vezes que o estado $a$ ocorre após o contexto $c$;
     - $N_c = \\sum_a N_{c,a}$ é o número total de ocorrências do contexto $c$.
-    
+
     Usando a lógica de contagem acima, a função para calcular a log-verossimilhança de uma cadeia de ordem k foi definida como:
     """)
 
-    st.code("""
-        def log_verossimilhanca_markov(sequencia, k):
+    st.code(
+        """
+    def log_verossimilhanca_markov(sequencia, k):
 
-        # Calcula contagens:
+        # Calcula contagens
         contagens_transicao = {}
         total_contexto = {}
 
         for t in range(k, len(sequencia)):
-            contexto = tuple(sequencia[t-k:t])
+            contexto = tuple(sequencia[t - k:t])
             proximo_estado = sequencia[t]
 
             if contexto not in contagens_transicao:
                 contagens_transicao[contexto] = {}
                 total_contexto[contexto] = 0
 
-            contagens_transicao[contexto][proximo_estado] = contagens_transicao[contexto].get(proximo_estado, 0) + 1
+            contagens_transicao[contexto][proximo_estado] = (
+                contagens_transicao[contexto].get(proximo_estado, 0) + 1
+            )
             total_contexto[contexto] += 1
 
-        # calcula verossimilhança:
+        # Calcula log-verossimilhança
         ell = 0.0
-        for contexto, contagens in contagens_transicao.items(): # elementos do .items "Desempacota" Dicionário; não é um loop duplo!!!
+        for contexto, contagens in contagens_transicao.items():
+            # .items() desempacota o dicionário 
             Nk_c = total_contexto[contexto]
-            for Nk_ca in contagens.values():  # .values pega apenas a contagem
+
+            for Nk_ca in contagens.values():
+                # .values() retorna apenas as contagens
                 ell += Nk_ca * math.log(Nk_ca / Nk_c)
 
         return ell
-            """, language="python")
-
-
-
+        """,
+        language="python"
+    )
 
 
 
@@ -251,12 +254,12 @@ elif sec == "Teste de Razão de Verossimilhança":
     =
     2\bigl(\ell_{k+1} - \ell_k\bigr).
     $$
-    
+
     E segue uma distribuição qui-quadrado com $$ (m - 1)\, m^{k}$$ graus de liberdade.""")
 
     st.markdown(r"""
         ## Computacional
-        
+
     Usando a função log_verossimilhanca_markov, o teste de Razão de Verossimilhança para as cadeias de ordem k e de ordem k+1 são montados assim:
     """)
 
@@ -271,4 +274,66 @@ p_value = 1 - chi2.cdf(LR, df=((m-1)*(m**(k+1)) - ((m-1)*(m**k))))
 
 print(p_value)
             """, language="python")
+
+    st.markdown(r"""
+        Para selecionar a ordem $k$ mais apropriada de uma sequência, podemos aplicar esse teste comparando $k$ e $k+1$, 
+        num loop de 'k_min' até 'k_max', até que se rejeite a hipótese de que k+1 se ajusta melhor aos dados do que k:""")
+
+    st.code(
+        """
+    def teste_razao_verossimilhanca_ordem(
+        sequencia,
+        k_min,
+        k_max,
+        alpha
+    ):
+        estados = list(set(sequencia))
+        m = len(estados)
+
+        resultados = []
+
+        for k in range(k_min, k_max):
+
+            # log-verossimilhanças
+            ell_k  = log_verossimilhanca_markov(sequencia, k)
+            ell_k1 = log_verossimilhanca_markov(sequencia, k + 1)
+
+            # estatística de razão de verossimilhança
+            LR = 2 * (ell_k1 - ell_k)
+
+            # graus de liberdade
+            df = ((m-1)*(m**(k+1)) - ((m-1)*(m**k)))
+
+            # p-valor
+            p_value = 1 - chi2.cdf(LR, df=df)
+
+            resultados.append({
+                "k_testado": k + 1,
+                "LR": LR,
+                "df": df,
+                "p_value": p_value
+            })
+
+            # critério de parada
+            if p_value >= alpha:
+                return {
+                    "ordem_escolhida": (
+                        f"Na comparação entre as ordens {k} e {k + 1}, "
+                        f"não rejeita a hipótese nula de que a cadeia tenha ordem {k}"
+                    ),
+                    "motivo": "p-valor maior que o limiar",
+                    "resultados": resultados
+                }
+
+        return {
+            "ordem_escolhida": k_max,
+            "motivo": "k_max atingido - cadeia pode ser de ordem maior",
+            "resultados": resultados
+        }
+        """,
+        language="python"
+    )
+
+
+
 
