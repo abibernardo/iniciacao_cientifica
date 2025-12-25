@@ -4,7 +4,6 @@ import itertools
 import plotly.express as px
 import pandas as pd
 
-
 st.title("Cadeia de Markov de Ordem K")
 
 st.markdown("""
@@ -36,7 +35,6 @@ with col3:
 sec = st.session_state.sec
 
 st.divider()
-
 
 # ---------------------------------------------------------
 # SIMULAÇÃO
@@ -188,12 +186,62 @@ if sec == 'Dicionário':
 
     st.plotly_chart(fig, use_container_width=True)
 
+    st.markdown("""Uma função que gera uma cadeia de markov aleatória de ordem k:""")
+
+    st.code(
+        """
+def simular_cadeia_markov_ordem_K(estados, K, T, pi_inicial=None, seed=None):
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    m = len(estados)
+
+    # -----------------------------
+    # 1. Distribuição inicial
+    # -----------------------------
+    if pi_inicial is None:
+        pi_inicial = np.ones(m) / m
+    else:
+        pi_inicial = np.array(pi_inicial)
+        pi_inicial = pi_inicial / pi_inicial.sum()
+
+    # -----------------------------
+    # 2. Todos os contextos possíveis
+    # -----------------------------
+    contextos = list(itertools.product(estados, repeat=K))
+
+    # -----------------------------
+    # 3. Gera transições aleatórias
+    # -----------------------------
+    transicoes = {}
+
+    for ctx in contextos:
+        p = np.random.rand(m)
+        p = p / p.sum()   # normaliza
+        transicoes[ctx] = p
+
+    # -----------------------------
+    # 4. Inicializa a sequência
+    # -----------------------------
+    X = list(np.random.choice(estados, size=K, p=pi_inicial))
+
+    # -----------------------------
+    # 5. Simula a cadeia
+    # -----------------------------
+    for t in range(K, T):
+        contexto = tuple(X[-K:])
+        probs = transicoes[contexto]
+        proximo = np.random.choice(estados, p=probs)
+        X.append(proximo)
+    return X, transicoes"""
+    )
+
 
 elif sec == "Árvore":
     st.header("Passo a Passo")
     # Estados e ordem
     # --------------------------
-
 
     st.markdown("""
     Para representar a cadeia de Markov de ordem K em forma de **árvore**, ao invés de criar um dicionário gigante com 
@@ -267,7 +315,6 @@ elif sec == "Árvore":
     **[0.1, 0.8, 0.1]** -- **P(B | A,B,C) = 0.8** (estados mais antigos 'fora', e mais novos 'dentro').
     """)
 
-
     # --------------------------
     # Inicialização
     # --------------------------
@@ -285,9 +332,9 @@ elif sec == "Árvore":
     K = 3
 
     T = 20
-    
+
     pi = np.array([0.5, 0.3, 0.2])
-    
+
     X = [np.random.choice(estados, p=pi) for _ in range(K)]
         """
     )
@@ -421,7 +468,7 @@ elif sec == "Simulação interativa":
     for i in range(m):
         with cols[i % 4]:
             estados.append(
-                st.text_input(f"Estado {i+1}", value=f"E{i+1}", key=f"estado_{i}")
+                st.text_input(f"Estado {i + 1}", value=f"E{i + 1}", key=f"estado_{i}")
             )
 
     # -----------------------------------------------------
@@ -436,7 +483,7 @@ elif sec == "Simulação interativa":
     for i, est in enumerate(estados):
         with cols_pi[i % 4]:
             pi_vals.append(
-                st.number_input(f"P({est})", 0.0, 1.0, 1.0/m, key=f"pi_{i}")
+                st.number_input(f"P({est})", 0.0, 1.0, 1.0 / m, key=f"pi_{i}")
             )
 
     pi = np.array(pi_vals)
@@ -473,7 +520,7 @@ elif sec == "Simulação interativa":
                     st.number_input(
                         f"P({ctx} → {estados[j]})",
                         0.0, 1.0,
-                        1.0/m,
+                        1.0 / m,
                         key=f"ctx_{'_'.join(ctx)}_{j}"
                     )
                 )
