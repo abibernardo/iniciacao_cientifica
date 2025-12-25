@@ -277,7 +277,7 @@ print(p_value)
 
     st.markdown(r"""
         Para selecionar a ordem $k$ mais apropriada de uma sequência, podemos aplicar esse teste comparando $k$ e $k+1$, 
-        num loop de 'k_min' até 'k_max', até que se rejeite a hipótese de que k+1 se ajusta melhor aos dados do que k:""")
+        num loop de uma ordem mínima até uma ordem máxima, até que não se rejeite a hipótese nula de que uma cadeia de ordem $k$ é suficiente""")
 
     st.code(
         """
