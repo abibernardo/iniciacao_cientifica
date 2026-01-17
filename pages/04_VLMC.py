@@ -1,192 +1,214 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title="VLMC – Context Algorithm",
+    layout="centered"
+)
 
-
-# =========================================================
+# =====================================================
 # TÍTULO
-# =========================================================
-st.title("Cadeias de Markov de Comprimento Variável (VLMC)")
+# =====================================================
+st.title("Variable Length Markov Chains (VLMC)")
 
+st.markdown(
+    "Descrição conceitual e estatística dos **VLMCs** "
+    "e do **Context Algorithm** para seleção da árvore de contextos."
+)
 
-# =========================================================
+st.divider()
+
+# =====================================================
 # O QUE É UM VLMC
-# =========================================================
-st.header("O que é um VLMC?")
+# =====================================================
+st.header("1. O que é um VLMC")
 
-st.markdown(r"""
-Um **Variable Length Markov Chain (VLMC)** é um processo estocástico no qual o **comprimento da memória relevante depende do passado observado**.
+st.markdown(
+    "Um **Variable Length Markov Chain (VLMC)** é um processo estocástico "
+    "no qual o comprimento da memória relevante depende do passado observado."
+)
 
-Em uma cadeia de Markov de ordem fixa \(k\):
-\[
-P(X_t \mid X_{t-1}, X_{t-2}, \dots)
-=
-P(X_t \mid X_{t-1}, \dots, X_{t-k})
-\]
+st.markdown("Em uma cadeia de Markov de ordem fixa:")
 
-No VLMC, a dependência é dada por um **contexto**:
-\[
-P(X_t \mid X_{t-1}, X_{t-2}, \dots)
-=
-P(X_t \mid c(X_{t-1}, X_{t-2}, \dots))
-\]
+st.latex(
+    r"P(X_t \mid X_{t-1}, X_{t-2}, \dots) = "
+    r"P(X_t \mid X_{t-1}, \dots, X_{t-k})"
+)
 
-onde \(c(\cdot)\) é o **menor sufixo do passado** suficiente para determinar
-a distribuição condicional de \(X_t\).
-""")
+st.markdown("No VLMC, a dependência é dada por um **contexto**:")
 
-st.info("""
-A memória **não é fixa**: alguns padrões exigem passado longo,
-outros apenas passado curto.
-""")
+st.latex(
+    r"P(X_t \mid X_{t-1}, X_{t-2}, \dots) = "
+    r"P(X_t \mid c(X_{t-1}, X_{t-2}, \dots))"
+)
 
-# =========================================================
+st.markdown(
+    "onde \(c(\cdot)\) é o **menor sufixo do passado** "
+    "necessário para determinar a distribuição de \(X_t\)."
+)
+
+st.info(
+    "A memória não é fixa: alguns padrões exigem passado longo, "
+    "outros apenas passado curto."
+)
+
+st.divider()
+
+# =====================================================
 # ÁRVORE DE CONTEXTOS
-# =========================================================
-st.header("Árvore de Contextos")
+# =====================================================
+st.header("2. Árvore de Contextos")
 
-st.markdown(r"""
-O conjunto de todos os contextos forma uma **árvore de contextos** \(\tau\),
-que satisfaz a **propriedade do sufixo**:
+st.markdown(
+    "Os contextos formam uma **árvore de contextos** \\(\\tau\\), "
+    "que satisfaz a **propriedade do sufixo**:"
+)
 
-- Nenhum contexto é sufixo de outro
-- Cada passado infinito possui exatamente um contexto associado
+st.markdown(
+    "- Nenhum contexto é sufixo de outro  \n"
+    "- Cada passado infinito admite exatamente um contexto"
+)
 
-A árvore define completamente o modelo VLMC.
-""")
+st.markdown(
+    "A árvore de contextos, junto com as probabilidades de transição, "
+    "define completamente o VLMC."
+)
 
-# =========================================================
+st.divider()
+
+# =====================================================
 # DADOS E ESTIMAÇÃO
-# =========================================================
-st.header("Estimação")
+# =====================================================
+st.header("3. Dados e estimação empírica")
 
-st.markdown(r"""
-Considere uma amostra observada:
-\[
-X_1, X_2, \dots, X_n \in \mathcal{X}
-\]
+st.markdown("Considere uma amostra observada:")
 
-Para uma palavra (contexto) \(w\), define-se a contagem:
-\[
-N(w) = \sum_{t=1}^n \mathbf{1}\{X_{t-|w|+1}^t = w\}
-\]
+st.latex(r"X_1, X_2, \dots, X_n \in \mathcal{X}")
 
-A estimativa de máxima verossimilhança da probabilidade de transição é:
-\[
-\hat P(a \mid w) = \frac{N(wa)}{N(w)}
-\]
+st.markdown("Para um contexto \(w\), define-se a contagem:")
 
-""")
+st.latex(
+    r"N(w) = \sum_{t=1}^n \mathbf{1}\{X_{t-|w|+1}^t = w\}"
+)
 
-# =========================================================
-# IDEIA DO CONTEXT ALGORITHM
-# =========================================================
-st.header("Ideia do Context Algorithm")
+st.markdown("A estimativa empírica da transição é:")
 
-st.markdown("""
-O **Context Algorithm**:
+st.latex(
+    r"\hat P(a \mid w) = \frac{N(wa)}{N(w)}"
+)
 
-1. Estima a **árvore de contextos**
-2. Estima as **probabilidades de transição**
+st.markdown(
+    "Essa é a **estimativa de máxima verossimilhança local** "
+    "associada a cada contexto."
+)
 
-A estratégia é:
+st.divider()
 
-> Começar com uma árvore de memória máxima  
-> e **podar contextos longos** sempre que eles **não trazem ganho estatístico suficiente**.
-""")
+# =====================================================
+# IDEIA DO ALGORITMO
+# =====================================================
+st.header("4. Ideia do Context Algorithm")
 
-# =========================================================
+st.markdown(
+    "O **Context Algorithm** estima simultaneamente:\n\n"
+    "- a árvore de contextos\n"
+    "- as probabilidades de transição\n\n"
+    "A estratégia é simples:"
+)
+
+st.success(
+    "Começar com uma árvore de memória máxima e **podar contextos longos** "
+    "que não produzem ganho estatístico relevante."
+)
+
+st.divider()
+
+# =====================================================
 # CRITÉRIO DE PODA
-# =========================================================
-st.header("Critério estatístico de poda")
+# =====================================================
+st.header("5. Critério estatístico de poda")
 
-st.markdown(r"""
-Para um contexto candidato \(w\) e seu sufixo imediato \(v\),
-define-se:
+st.markdown(
+    "Para um contexto candidato \(w\) e seu sufixo imediato \(v\), define-se:"
+)
 
-\[
-\Delta_w
-=
-N(w)
-\sum_{a \in \mathcal{X}}
-\hat P(a \mid w)
-\log
-\frac{\hat P(a \mid w)}{\hat P(a \mid v)}
-\]
+st.latex(
+    r"\Delta_w = "
+    r"N(w)\sum_{a\in\mathcal{X}} "
+    r"\hat P(a\mid w)\log\frac{\hat P(a\mid w)}{\hat P(a\mid v)}"
+)
 
-Equivalentemente:
-\[
-\Delta_w
-=
-N(w) \cdot
-\mathrm{KL}\big(\hat P(\cdot \mid w)\;\|\;\hat P(\cdot \mid v)\big)
-\]
+st.markdown("Equivalentemente:")
 
-Esse valor mede **quanto a distribuição muda** ao usar
-um contexto mais longo.
-""")
+st.latex(
+    r"\Delta_w = N(w)\cdot "
+    r"\mathrm{KL}\big(\hat P(\cdot\mid w)\,\|\,\hat P(\cdot\mid v)\big)"
+)
 
-st.markdown("""
-### Regra de decisão
+st.markdown("**Regra de decisão:**")
 
-- Se \(\Delta_w \ge K_n\): **mantém o contexto**
-- Se \(\Delta_w < K_n\): **poda o contexto**
+st.markdown(
+    "- Se \\(\\Delta_w \\ge K_n\\): manter o contexto  \n"
+    "- Se \\(\\Delta_w < K_n\\): podar o contexto"
+)
 
-onde o cutoff cresce lentamente com a amostra, tipicamente:
-\[
-K_n = C \log n
-\]
-""")
+st.markdown("O cutoff cresce lentamente com a amostra:")
 
-st.warning("""
-O algoritmo só aceita memória longa quando ela é
-estatisticamente justificável.
-""")
+st.latex(r"K_n = C\log n")
 
-# =========================================================
-# PASSO A PASSO DO ALGORITMO
-# =========================================================
-st.header("Passo a passo do Context Algorithm")
+st.warning(
+    "Memória longa só é aceita quando melhora "
+    "significativamente a verossimilhança."
+)
 
-st.markdown("""
-### **Step 1 — Construção da árvore máxima**
-- Escolha uma profundidade máxima \(m\)
-- Construa todos os contextos observados com \(|w| \le m\)
-- Exija \(N(w) \ge 2\) (todo contexto deve aparecer pelo menos duas vezes)
+st.divider()
 
----
+# =====================================================
+# PASSO A PASSO
+# =====================================================
+st.header("6. Passo a passo do algoritmo")
 
-### **Step 2 — Poda bottom-up**
-- Para cada **nó terminal** (folha) da árvore:
-  - Compare o contexto \(w\) com seu sufixo imediato ("pai")
-  - Calcule \(\Delta_w\)
-  - Pode o nó se \(\Delta_w < K_n\)
+st.markdown("**Step 1 — Árvore máxima**")
+st.markdown(
+    "- Escolher profundidade máxima \(m\)\n"
+    "- Incluir todos os contextos observados com \\(|w| \\le m\\)\n"
+    "- Exigir \\(N(w) \\ge 2\\)"
+)
 
----
+st.markdown("**Step 2 — Poda bottom-up**")
+st.markdown(
+    "- Para cada nó terminal:\n"
+    "  - Comparar \(w\) com seu sufixo\n"
+    "  - Calcular \\(\\Delta_w\\)\n"
+    "  - Podar se \\(\\Delta_w < K_n\\)"
+)
 
-### **Step 3 — Iteração**
-- Repita o Step 2 até que nenhuma poda adicional seja possível
+st.markdown("**Step 3 — Iterar**")
+st.markdown(
+    "Repetir a poda até que nenhuma remoção adicional seja possível."
+)
 
----
+st.markdown("**Step 4 — Estimação final**")
 
-### **Step 4 — Estimação final**
-- Para cada contexto final \(c\):
-\[
-\hat P(a \mid c) = \frac{N(ca)}{N(c)}
-\]
+st.latex(
+    r"\hat P(a\mid c) = \frac{N(ca)}{N(c)}"
+)
 
-O resultado é o **VLMC ajustado por máxima verossimilhança**.
-""")
+st.markdown(
+    "O resultado final é a **árvore de contextos estimada** "
+    "e o **VLMC ajustado por máxima verossimilhança**."
+)
 
-# =========================================================
-# INTERPRETAÇÃO FINAL
-# =========================================================
-st.header("Interpretação")
+st.divider()
 
-st.markdown("""
-- Cada decisão de poda é um **teste de razão de verossimilhança** que testa cada contexto contra seu sufixo (contexto imediatamente anterior)
+# =====================================================
+# INTERPRETAÇÃO
+# =====================================================
+st.header("7. Interpretação estatística")
 
-""")
+st.markdown(
+    "- Cada poda corresponde a um **teste de razão de verossimilhança**\n"
+    "- O método equivale a uma seleção hierárquica tipo **BIC / MDL**\n"
+    "- O estimador é **consistente** sob hipóteses regulares"
+)
 
-st.markdown("---")
-st.caption("VLMC • Context Algorithm • Rissanen (1983), Bühlmann & Wyner (1999)")
-
+st.caption("Rissanen (1983) • Bühlmann & Wyner (1999)")
