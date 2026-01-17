@@ -1,26 +1,18 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title="VLMC – Context Algorithm",
-    layout="centered"
-)
+
 
 # =====================================================
 # TÍTULO
 # =====================================================
 st.title("Variable Length Markov Chains (VLMC)")
 
-st.markdown(
-    "Descrição conceitual e estatística dos **VLMCs** "
-    "e do **Context Algorithm** para seleção da árvore de contextos."
-)
 
-st.divider()
 
 # =====================================================
 # O QUE É UM VLMC
 # =====================================================
-st.header("1. O que é um VLMC")
+st.header("O que é um VLMC")
 
 st.markdown(
     "Um **Variable Length Markov Chain (VLMC)** é um processo estocástico "
@@ -56,7 +48,7 @@ st.divider()
 # =====================================================
 # ÁRVORE DE CONTEXTOS
 # =====================================================
-st.header("2. Árvore de Contextos")
+st.header("Árvore de Contextos")
 
 st.markdown(
     "Os contextos formam uma **árvore de contextos** \\(\\tau\\), "
@@ -78,7 +70,7 @@ st.divider()
 # =====================================================
 # DADOS E ESTIMAÇÃO
 # =====================================================
-st.header("3. Dados e estimação empírica")
+st.header("Estimação")
 
 st.markdown("Considere uma amostra observada:")
 
@@ -90,14 +82,14 @@ st.latex(
     r"N(w) = \sum_{t=1}^n \mathbf{1}\{X_{t-|w|+1}^t = w\}"
 )
 
-st.markdown("A estimativa empírica da transição é:")
+st.markdown("A estimativa da probabilidade de transição é:")
 
 st.latex(
     r"\hat P(a \mid w) = \frac{N(wa)}{N(w)}"
 )
 
 st.markdown(
-    "Essa é a **estimativa de máxima verossimilhança local** "
+    "Essa é a **estimativa de máxima verossimilhança** "
     "associada a cada contexto."
 )
 
@@ -106,13 +98,12 @@ st.divider()
 # =====================================================
 # IDEIA DO ALGORITMO
 # =====================================================
-st.header("4. Ideia do Context Algorithm")
+st.header("Ideia do Context Algorithm")
 
 st.markdown(
     "O **Context Algorithm** estima simultaneamente:\n\n"
     "- a árvore de contextos\n"
     "- as probabilidades de transição\n\n"
-    "A estratégia é simples:"
 )
 
 st.success(
@@ -125,10 +116,10 @@ st.divider()
 # =====================================================
 # CRITÉRIO DE PODA
 # =====================================================
-st.header("5. Critério estatístico de poda")
+st.header("Critério de Poda")
 
 st.markdown(
-    "Para um contexto candidato \(w\) e seu sufixo imediato \(v\), define-se:"
+    "Para um contexto \(w\) e seu sufixo imediato \(v\) ("pai"), define-se:"
 )
 
 st.latex(
@@ -203,12 +194,12 @@ st.divider()
 # =====================================================
 # INTERPRETAÇÃO
 # =====================================================
-st.header("7. Interpretação estatística")
+st.header("Interpretação")
 
 st.markdown(
     "- Cada poda corresponde a um **teste de razão de verossimilhança**\n"
-    "- O método equivale a uma seleção hierárquica tipo **BIC / MDL**\n"
-    "- O estimador é **consistente** sob hipóteses regulares"
+    "que testa cada contexto contra seu sufixo"
+
 )
 
 st.caption("Rissanen (1983) • Bühlmann & Wyner (1999)")
