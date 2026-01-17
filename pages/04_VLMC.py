@@ -119,7 +119,7 @@ st.divider()
 st.header("Critério de Poda")
 
 st.markdown(
-    "Para um contexto \(w\) e seu sufixo imediato \(v\) ("pai"), define-se:"
+    "Para um contexto \(w\) e seu sufixo imediato \(v\), define-se:"
 )
 
 st.latex(
