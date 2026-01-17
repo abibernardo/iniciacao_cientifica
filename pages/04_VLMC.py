@@ -156,7 +156,7 @@ st.divider()
 # =====================================================
 # PASSO A PASSO
 # =====================================================
-st.header("6. Passo a passo do algoritmo")
+st.header("Passo a passo do algoritmo")
 
 st.markdown("**Step 1 — Árvore máxima**")
 st.markdown(
