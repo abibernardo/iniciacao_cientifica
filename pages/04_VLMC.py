@@ -211,13 +211,15 @@ if sec == "VLMC":
 else:
     st.code(
         """vlmc = {
-        "A": [0.5, 0.3, 0.2],          # contexto curto
-        "B": {
-            "C": [0.1, 0.6, 0.3],      # contexto médio
-            "A": {
-                "B": [0.2, 0.3, 0.5]   # contexto longo
-            }
-        }
-    }""",
+    "0": [0, 0],
+    
+    "1": {
+        "0": {
+            "0": [0, 0],
+            "1": [0, 0]
+        },
+        "1": [0, 0]
+    }
+}""",
         language="python"
     )
