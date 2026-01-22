@@ -1,6 +1,7 @@
 import streamlit as st
 
 st.title("Variable Length Markov Chains (VLMC)")
+st.divider()
 
 if "sec" not in st.session_state:
     st.session_state.sec = "VLMC"
