@@ -1,13 +1,20 @@
 import streamlit as st
 
-
-
-# =====================================================
-# TÍTULO
-# =====================================================
 st.title("Variable Length Markov Chains (VLMC)")
 
+if "sec" not in st.session_state:
+    st.session_state.sec = "VLMC"
 
+col1, col2 = st.columns(2)
+
+with col1:
+    st.button("VLMC", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="VLMC"))
+with col2:
+    st.button("Implementação", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="Implementação"))
+
+sec = st.session_state.sec
 
 # =====================================================
 # O QUE É UM VLMC
@@ -158,22 +165,21 @@ st.divider()
 # =====================================================
 st.header("Passo a passo do algoritmo")
 
-st.markdown("**Step 1 — Árvore máxima**")
-st.markdown(
-    "- Escolher profundidade máxima \(m\)\n"
-    "- Incluir todos os contextos observados com \\(|w| \\le m\\)\n"
-    "- Exigir \\(N(w) \\ge 2\\)"
-)
+st.markdown("**Passo 1 — Árvore máxima**")
 
-st.markdown("**Step 2 — Poda bottom-up**")
-st.markdown(
-    "- Para cada nó terminal:\n"
-    "  - Comparar \(w\) com seu sufixo\n"
-    "  - Calcular \\(\\Delta_w\\)\n"
-    "  - Podar se \\(\\Delta_w < K_n\\)"
-)
+st.markdown("- Escolher profundidade máxima $m$")
+st.markdown("- Incluir todos os contextos observados com $|w| \\le m$")
+st.markdown("- Exigir $N(w) \\ge 2$")
 
-st.markdown("**Step 3 — Iterar**")
+
+st.markdown("**Passo 2 — Poda bottom-up**")
+
+st.markdown("- Para cada nó terminal:")
+st.markdown("- Comparar o contexto $w$ com seu sufixo")
+st.markdown("- Calcular $\\Delta_w$")
+st.markdown("- Podar se $\\Delta_w < K_n$")
+
+st.markdown("**Passo 3 — Iterar**")
 st.markdown(
     "Repetir a poda até que nenhuma remoção adicional seja possível."
 )
