@@ -209,6 +209,7 @@ if sec == "VLMC":
 
     st.caption("Rissanen (1983) • Bühlmann & Wyner (1999)")
 else:
+    st.header("Estrutura")
     st.code(
         """vlmc = {
     "0": [0, 0],
