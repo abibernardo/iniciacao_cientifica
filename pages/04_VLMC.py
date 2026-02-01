@@ -7,7 +7,7 @@ st.title("Variable Length Markov Chains (VLMC)")
 if "sec" not in st.session_state:
     st.session_state.sec = "VLMC"
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.button("VLMC", use_container_width=True,
@@ -15,6 +15,9 @@ with col1:
 with col2:
     st.button("Simulação", use_container_width=True,
               on_click=lambda: st.session_state.update(sec="Simulação"))
+with col3:
+    st.button("Estimação", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="Estimação"))
 
 sec = st.session_state.sec
 st.divider()
@@ -204,7 +207,7 @@ if sec == "VLMC":
     )
 
     st.caption("Rissanen (1983) • Bühlmann & Wyner (1999)")
-else:
+elif sec == "Simulação":
 
     st.header("Representação da Estrutura")
 
