@@ -1,3 +1,4 @@
+
 import streamlit as st
 import numpy as np
 import itertools
@@ -311,7 +312,7 @@ elif sec == "Árvore":
     ''')
 
     st.markdown("""
-    Por exemplo, na cadeia de cima, se tivemos os estados C, B, A, então o vetor de probabilidade do próximo estado é
+    Por exemplo, na cadeia de cima, se tivemos os estados C (hoje), B (ontem), A (anteontem), então o vetor de probabilidade do próximo estado é
     **[0.1, 0.8, 0.1]** -- **P(B | A,B,C) = 0.8** (estados mais antigos 'fora', e mais novos 'dentro').
     """)
 
@@ -342,7 +343,7 @@ elif sec == "Árvore":
     st.markdown("""
     O loop abaixo, de K até T: 
     - Define o contexto como os últimos K estados sorteados na lista X
-    - Atribui à 'x, y, z' os três últimos estados
+    - Atribui à 'x (anteontem), y (ontem), z (hoje)' os três últimos estados
     - Indexa as chaves dos dicionários respectivamente pelos K últimos estados ('caminhando' pela árvore), 
     e capta o vetor de prob correspondente àquele contexto
     - Sorteia o próximo estado com a distribuição de probabilidade acima
@@ -353,7 +354,7 @@ elif sec == "Árvore":
         for t in range(K, T):
             contexto = tuple(X[-K:])
             x, y, z = contexto
-            probs = arvore[x][y][z]
+            probs = arvore[z][y][x]
             proximo = np.random.choice(estados, p=probs)
             X.append(proximo)
         """)
