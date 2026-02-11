@@ -313,7 +313,7 @@ elif sec == "Árvore":
 
     st.markdown("""
     Por exemplo, na cadeia de cima, se tivemos os estados C (hoje), B (ontem), A (anteontem), então o vetor de probabilidade do próximo estado é
-    **[0.1, 0.8, 0.1]** -- **P(B | A,B,C) = 0.8** (estados mais antigos 'fora', e mais novos 'dentro').
+    **[0.1, 0.8, 0.1]** -- **P(B | A,B,C) = 0.8** 
     """)
 
     # --------------------------
