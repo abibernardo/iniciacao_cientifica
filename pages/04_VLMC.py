@@ -1,8 +1,8 @@
 import streamlit as st
 import numpy as np
+import plotly.express as px
 
 st.title("Variable Length Markov Chains (VLMC)")
-
 
 if "sec" not in st.session_state:
     st.session_state.sec = "VLMC"
@@ -211,113 +211,229 @@ elif sec == "Simulação":
 
     st.header("Representação da Estrutura")
 
-    st.markdown("A representação de árvore para a cadeia de ordem variável é a mesma que para cadeias de ordem fixa, com exceção que a profundidade da árvore varia com o contexto (galhos de tamanhos diferentes):")
+    st.markdown(
+        "A representação de árvore para a cadeia de ordem variável é a mesma que para cadeias de ordem fixa, com exceção que a profundidade da árvore varia com o contexto (galhos de tamanhos diferentes):")
 
     st.code(
         """
-    
-        arvore = {
-            "A": [0.5, 0.3, 0.2],   # Contexto curto: apenas "A"
-    
-            "B": {
-                "A": {
-                    "A": [0.7, 0.2, 0.1],  # Contexto longo: "BAA"
-                    "B": [0.4, 0.4, 0.2]   # Contexto longo: "BAB"
-                },
-                "C": [0.2, 0.5, 0.3]       # Contexto médio: "BC"
-            }
+    arvore = {
+
+    # Hoje é A
+    "A": [0.5, 0.3, 0.2],
+
+    # Hoje é B
+    "B": {
+
+        # Ontem foi C
+        "C": [0.2, 0.5, 0.3],
+        # Ontem foi B
+        "B": [0.3, 0.4, 0.3],
+        # Ontem foi A
+        "A": {
+            # Anteontem foi A:
+            "A": [0.7, 0.2, 0.1],  
+            # Anteontem foi B:
+            "B": [0.4, 0.4, 0.2],  
+            # Anteontem foi C:  
+            "C": [0.5, 0.3, 0.2]   
         }
+    },
+
+    # Hoje é C
+    "C": {
+        # Ontem foi A
+        "A": [0.3, 0.4, 0.3],
+        # Ontem foi B
+        "B": [0.2, 0.5, 0.3],
+        # Ontem foi C
+        "C": [0.4, 0.3, 0.3]
+    }
+}
+
+        
         """,
         language="python"
     )
+    st.markdown("A ideia é que a árvore seja acessada do estado mais recente até o mais antigo, da forma **contexto = arvore[hoje][ontem][anteontem]**, até a folha (probabilidades de transição)")
 
     st.divider()
     st.header("Encontrando probabilidades de transição")
-    st.markdown("Para simular uma sequência gerada por uma vlmc, a função auxiliar abaixo encontra as probabilidades de transição, dada a árvore e o histórico.")
-    st.markdown("1. Parte do maior contexto possível de comprimento K,")
-    st.markdown("2. Verifica se os últimos K estados do histórico correspondem ao contexto, caminhando pela árvore do estado mais antigo até o mais novo,")
-    st.markdown("3. Se caminhar por todo contexto e chegar até as folhas (lista), a função retorna as probabilidades. Caso contrário, ela encurta o contexto analisado no histórico (desconsidera o estado mais antigo) e repete o processo.")
+    st.markdown(
+        "Para simular uma sequência gerada por uma vlmc, a função auxiliar abaixo encontra as probabilidades de transição, dada a árvore e o histórico.")
+    st.markdown("1. Acessa a árvore por esse estado mais recente do histórico,")
+    st.markdown(
+        "2. Caminha pela árvore do estado mais recente até o mais antigo, até que não haja mais correspondência")
+    st.markdown(
+        "3. Retorna a folha com as probabilidades correspondentes ao contexto")
 
     st.code(
         """
-        def achar_contexto(arvore, historico):
-            # Percorremos do MAIOR sufixo para o menor
-            for k in range(len(historico), 0, -1):
-    
-                sufixo = historico[-k:]  # últimos k símbolos
-                contexto = arvore        # começamos na raiz
-                ok = True
-    
-                # Descemos na árvore símbolo por símbolo
-                for s in sufixo:
-    
-                    # Se já estamos numa folha, já achamos o contexto
-                    if isinstance(contexto, list):
-                        return contexto
-    
-                    # Se o símbolo existe como filho, seguimos descendo
-                    if s in contexto:
-                        contexto = contexto[s]
-                    # Caso não haja correspondência, voltamos para o loop externo
-                    else:
-                        ok = False
-                        break
-    
-                # Se o caminho existe e terminamos numa folha → contexto válido
-                if ok and isinstance(contexto, list):
-                    return contexto
-    
-            # Se nada foi encontrado, há erro no modelo
-            raise ValueError("Nenhum contexto encontrado.")
+    def achar_contexto(arvore, historico):
+        contexto = arvore
+
+        # percorre do mais recente para o mais antigo. 
+        # Se historico = [anteontem, ontem, hoje], então partimos de 'hoje' até 'anteontem'
+        for s in list(reversed(historico)):
+
+            # se já estamos numa folha → contexto encontrado, retona folha com probabilidades
+            if isinstance(contexto, list):
+                return contexto
+
+            # se existe ramo correspondente, desce a árvore (estado anterior) e retorna ao loop
+            if s in contexto:
+                contexto = contexto[s]
+            # se não existe ramo correspondente, sai do loop
+            else:
+                break  # não há mais aprofundamento possível
+
+        # se terminamos numa lista, retornamos a folha com as probabilidades
+        if isinstance(contexto, list):
+            return contexto
+        # Caso contrário, o historico não existe na árvore
+        raise ValueError("Nenhum contexto encontrado.")
         """,
         language="python"
-    )
-
-    st.markdown(
-        """
-        - Parte do passado completo do histórico (maior sufixo possível)
-        - Tenta caminhar na árvore com os estados do sufixo **(loop interno)**
-        - Se não existir na árvore → encurta a memória **(loop externo)**
-        - Para quando encontra uma folha (um contexto válido)
-        - Retorna a folha (probabilidades de transição)
-        """
     )
 
     st.divider()
     st.header("Simulação da VLMC")
 
     st.markdown("Para simular uma sequência:")
-    st.markdown("1. Gera os primeiros k_max estados a partir de uma dist inicial")
-    st.markdown("2. Usa todo o histórico (lista X)")
+    st.markdown("1. Gera os primeiros estados a partir de uma dist inicial")
+    st.markdown("2. Usa o histórico (lista X)")
     st.markdown("3. Usa a função auxiliar para encontrar probabilidades de transição dado o histórico")
     st.markdown("4. Gera próximo estado de acordo com essas probabilidades, e adiciona no histórico X.")
 
     st.code(
         """
-        def simular_vlmc(arvore, estados, T, pi, K_max):
-    
-            # Passado inicial gerado da distribuição inicial
-            X = [np.random.choice(estados, p=pi) for _ in range(K_max)]
-    
-            # Evolução da cadeia
-            for t in range(K_max, T):
-    
-                historico = X[:]  # todo o passado observado
-    
-                # Encontramos as probs de transição com a função auxiliar
-                probs = achar_contexto(arvore, historico)
-    
-                # Sorteamos o próximo estado segundo essa distribuição
-                proximo = np.random.choice(estados, p=probs)
-    
-                # Acrescentamos à sequência
-                X.append(proximo)
-    
-            return X
-            
-        estados = ["A", "B", "C"]
-        pi = np.array([0.5, 0.3, 0.2])
-        seq = simular_vlmc(arvore, estados, T=20, pi=pi, K_max=4)
+    def simular_vlmc(arvore, estados, T, pi, ordem_max):
+        # Passado inicial gerado da distribuição inicial
+        X = [np.random.choice(estados, p=pi) for _ in range(ordem_max)]
+
+        # Evolução da cadeia
+        for t in range(ordem_max, T):
+
+            #Pega os últimos ordem_max estados do histórico, sem inverter a ordem (do mais antigo até o mais novo)
+            historico = X[-ordem_max:] 
+
+            # Encontramos as probs de transição com a função auxiliar
+            probs = achar_contexto(arvore, historico)
+
+            # Sorteamos o próximo estado segundo essa distribuição
+            proximo = np.random.choice(estados, p=probs)
+
+            # Acrescentamos à sequência
+            X.append(proximo)
+
+        return X
+
+
+    estados = ["A", "B", "C"]
+    pi = np.array([0.5, 0.3, 0.2])
+    seq = simular_vlmc(arvore, estados, T=20, pi=pi, ordem_max=4)
         """,
         language="python"
     )
+
+    historico = ["B", "C", "B", "A", "C", "A", "B", "C", "C", "A", "A", "B", "B", "C", "B"]
+
+    arvore = {
+
+        # Hoje é A
+        "A": [0.5, 0.3, 0.2],
+
+        # Hoje é B
+        "B": {
+
+            # Ontem foi C
+            "C": [0.2, 0.5, 0.3],
+            # Ontem foi B
+            "B": [0.3, 0.4, 0.3],
+            # Ontem foi A
+            "A": {
+                # Anteontem foi A:
+                "A": [0.7, 0.2, 0.1],
+                # Anteontem foi B:
+                "B": [0.4, 0.4, 0.2],
+                # Anteontem foi C:
+                "C": [0.5, 0.3, 0.2]
+            }
+        },
+
+        # Hoje é C
+        "C": {
+            # Ontem foi A
+            "A": [0.3, 0.4, 0.3],
+            # Ontem foi B
+            "B": [0.2, 0.5, 0.3],
+            # Ontem foi C
+            "C": [0.4, 0.3, 0.3]
+        }
+    }
+
+
+    def achar_contexto(arvore, historico):
+        contexto = arvore
+
+        # percorre do mais recente para o mais antigo.
+        # Se historico = [anteontem, ontem, hoje], então partimos de 'hoje' até 'anteontem'
+        for s in list(reversed(historico)):
+
+            # se já estamos numa folha → contexto encontrado, retona folha com probabilidades
+            if isinstance(contexto, list):
+                return contexto
+
+            # se existe ramo correspondente, desce a árvore (estado anterior) e retorna ao loop
+            if s in contexto:
+                contexto = contexto[s]
+            # se não existe ramo correspondente, sai do loop
+            else:
+                break  # não há mais aprofundamento possível
+
+        # se terminamos numa lista, retornamos a folha com as probabilidades
+        if isinstance(contexto, list):
+            return contexto
+        # Caso contrário, o historico não existe na árvore
+        raise ValueError("Nenhum contexto encontrado.")
+
+
+    def simular_vlmc(arvore, estados, T, pi, ordem_max):
+        # Passado inicial gerado da distribuição inicial
+        X = [np.random.choice(estados, p=pi) for _ in range(ordem_max)]
+
+        # Evolução da cadeia
+        for t in range(ordem_max, T):
+            historico = X[-ordem_max:]
+
+            # Encontramos as probs de transição com a função auxiliar
+            probs = achar_contexto(arvore, historico)
+
+            # Sorteamos o próximo estado segundo essa distribuição
+            proximo = np.random.choice(estados, p=probs)
+
+            # Acrescentamos à sequência
+            X.append(proximo)
+
+        return X
+
+
+    estados = ["A", "B", "C"]
+    pi = np.array([0.5, 0.3, 0.2])
+    X = simular_vlmc(arvore, estados, T=20, pi=pi, ordem_max=4)
+
+    indices = list(range(20))
+
+    fig = px.scatter(
+        x=indices,
+        y=X,
+        text=X,
+        title="Trajetória gerada pela VLMC",
+        labels={"x": "Tempo (t)", "y": "Estado"},
+    )
+
+    fig.update_traces(
+        mode="lines+markers+text",
+        textposition="top center",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
