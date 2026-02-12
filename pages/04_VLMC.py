@@ -250,11 +250,12 @@ elif sec == "Simulação":
     }
 }
 
-        
+
         """,
         language="python"
     )
-    st.markdown("A ideia é que a árvore seja acessada do estado mais recente até o mais antigo, da forma **contexto = arvore[hoje][ontem][anteontem]**, até a folha (probabilidades de transição)")
+    st.markdown(
+        "A ideia é que a árvore seja acessada do estado mais recente até o mais antigo, da forma **contexto = arvore[hoje][ontem][anteontem]**, até a folha (probabilidades de transição)")
 
     st.divider()
     st.header("Encontrando probabilidades de transição")
@@ -437,3 +438,45 @@ elif sec == "Simulação":
     )
 
     st.plotly_chart(fig, use_container_width=True)
+    
+    
+    
+    
+elif sec == "Estimação":
+    st.code(
+        """
+    def contar_contextos_maximos(historico, ordem_max):
+
+        contagens_transicao = {}
+        total_contexto = {}
+    
+        for t in range(1, len(historico)):
+    
+            # Para cada comprimento possível
+            for k in range(1, min(ordem_max, t) + 1):
+    
+                # contexto mais recente primeiro
+                contexto = tuple(reversed(historico[t-k:t]))
+    
+                proximo_estado = historico[t]
+    
+                if contexto not in contagens_transicao:
+                    contagens_transicao[contexto] = {}
+                    total_contexto[contexto] = 0
+    
+                contagens_transicao[contexto][proximo_estado] = (
+                    contagens_transicao[contexto].get(proximo_estado, 0) + 1
+                )
+    
+                total_contexto[contexto] += 1
+    
+        return contagens_transicao, total_contexto
+
+    contagens_transicao, total_contexto = contar_contextos_maximos(X, 3)
+    
+    print(total_contexto)
+    print(contagens_transicao)  # só preciso desse; é só somar a quantidade de transições de um contexto pra ter o total
+
+        """,
+        language="python"
+    )
