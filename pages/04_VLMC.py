@@ -7,7 +7,7 @@ st.title("Variable Length Markov Chains (VLMC)")
 if "sec" not in st.session_state:
     st.session_state.sec = "VLMC"
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.button("VLMC", use_container_width=True,
@@ -18,6 +18,9 @@ with col2:
 with col3:
     st.button("Estimação", use_container_width=True,
               on_click=lambda: st.session_state.update(sec="Estimação"))
+with col3:
+    st.button("Representação", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="Representação"))
 
 sec = st.session_state.sec
 st.divider()
@@ -438,45 +441,98 @@ elif sec == "Simulação":
     )
 
     st.plotly_chart(fig, use_container_width=True)
-    
-    
-    
-    
+
+
+
+
 elif sec == "Estimação":
+
+    st.markdown("**Agora, vamos assumir que temos um histórico/sequência de estados gerados por uma VLMC desconhecida, e que queremos estimar as probs de transição.**")
+    st.header("Contagem de contextos e transições")
+    st.markdown("Definindo uma ordem máxima possível para a cadeia, a função **'contagem_contextos'** retorna quantas vezes cada contexto é seguido por cada estado no historico.")
+    st.markdown("Para cada posição no histórico (loop externo), de 1 até a ordem máxima (loop interno), a função registra o contexto observado, registra o estado observado após o contexto, e faz a contagem.")
+
     st.code(
         """
-    def contar_contextos_maximos(historico, ordem_max):
+    def contagem_contextos(historico, ordem_max):
 
         contagens_transicao = {}
-        total_contexto = {}
-    
+
+        # Para cada posição no histórico:
         for t in range(1, len(historico)):
-    
-            # Para cada comprimento possível
+
+            # Registrando contextos de tamanho 1 até a ordem máxima da cadeia:
             for k in range(1, min(ordem_max, t) + 1):
-    
-                # contexto mais recente primeiro
-                contexto = tuple(reversed(historico[t-k:t]))
-    
+
+                # Contexto mais recente primeiro (últimos k estados)
+                contexto = tuple(reversed(historico[t - k:t]))
+
+                # Estado seguinte após o contexto
                 proximo_estado = historico[t]
-    
+
                 if contexto not in contagens_transicao:
                     contagens_transicao[contexto] = {}
-                    total_contexto[contexto] = 0
-    
+
+                # Adiciona 1 na contagem de vezes que 'proximo_estado' aparece após 'contexto'
                 contagens_transicao[contexto][proximo_estado] = (
                     contagens_transicao[contexto].get(proximo_estado, 0) + 1
                 )
-    
-                total_contexto[contexto] += 1
-    
-        return contagens_transicao, total_contexto
 
-    contagens_transicao, total_contexto = contar_contextos_maximos(X, 3)
-    
-    print(total_contexto)
-    print(contagens_transicao)  # só preciso desse; é só somar a quantidade de transições de um contexto pra ter o total
+        return contagens_transicao
 
+
+    # Lista X com um histórico de estados gerados por uma VLMC:
+    contagens_transicao = contagem_contextos(X, 3)
         """,
         language="python"
     )
+
+    st.header("Probabilidades de transição")
+
+    st.markdown("""Agora, a partir do objeto **'contagens_transicao'** definido acima, vamos estimar as probabilidades de transição com 
+    $$
+    \\hat p(a \\mid c) = \\frac{N_{c,a}}{N_c}.
+    $$
+    """)
+
+    st.markdown(" A função **'estimar_probabilidades'** conta quantas vezes um contexto foi observado (loop externo), e quantas vezes cada estado foi observado após o contexto (loop interno)")
+
+    st.code(
+        """
+    def estimar_probabilidades(contagens_transicao):
+
+        probabilidades = {}
+
+        # Itera sobre pares (contexto, transicoes)
+        # Exemplo: ('B',) e {'A': 10, 'B': 5, 'C': 3}
+        for contexto, transicoes in contagens_transicao.items():
+
+            # Total N(w) = soma das transições do contexto
+            total = sum(transicoes.values())
+
+            probabilidades[contexto] = {}
+
+            # Itera sobre (estado, contagem) dentro do contexto
+            # Exemplo: ('A', 10), ('B', 5), ('C', 3)
+            for estado, contagem in transicoes.items():
+
+                probabilidades[contexto][estado] = contagem / total
+
+        return probabilidades
+
+
+    probs = estimar_probabilidades(contagens_transicao)
+        """,
+        language="python"
+    )
+
+    st.markdown("Dado que definimos o objeto **'probs'** acima, se observamos 'B' hoje, 'A' ontem e 'A' anteontem, a probabilidade de que amanhã seja 'A' é acessada dessa forma: ")
+    st.code("""
+    contexto = ['B', 'A', 'A']
+    contexto = tuple(contexto)
+    p = probs[contexto]['A']
+    print(p)
+    """)
+
+elif sec == "Representação":
+    st.markdown("Dadas as funções de simulação do VLMC e de estimação das probabilidades de transição definidas anteriormente:")
