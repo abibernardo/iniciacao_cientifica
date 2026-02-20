@@ -1,6 +1,117 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
+import pandas as pd
+
+historico = ["B", "C", "B", "A", "C", "A", "B", "C", "C", "A", "A", "B", "B", "C", "B"]
+
+arvore = {
+
+        # Hoje é A
+        "A": [0.5, 0.3, 0.2],
+
+        # Hoje é B
+        "B": {
+
+            # Ontem foi C
+            "C": [0.2, 0.5, 0.3],
+            # Ontem foi B
+            "B": [0.3, 0.4, 0.3],
+            # Ontem foi A
+            "A": {
+                # Anteontem foi A:
+                "A": [0.7, 0.2, 0.1],
+                # Anteontem foi B:
+                "B": [0.4, 0.4, 0.2],
+                # Anteontem foi C:
+                "C": [0.5, 0.3, 0.2]
+            }
+        },
+
+        # Hoje é C
+        "C": {
+            # Ontem foi A
+            "A": [0.3, 0.4, 0.3],
+            # Ontem foi B
+            "B": [0.2, 0.5, 0.3],
+            # Ontem foi C
+            "C": [0.4, 0.3, 0.3]
+        }
+    }
+
+
+def achar_contexto(arvore, historico):
+    contexto = arvore
+
+    # percorre do mais recente para o mais antigo.
+    # Se historico = [anteontem, ontem, hoje], então partimos de 'hoje' até 'anteontem'
+    for s in list(reversed(historico)):
+
+        # se já estamos numa folha → contexto encontrado, retona folha com probabilidades
+        if isinstance(contexto, list):
+            return contexto
+
+        # se existe ramo correspondente, desce a árvore (estado anterior) e retorna ao loop
+        if s in contexto:
+            contexto = contexto[s]
+        # se não existe ramo correspondente, sai do loop
+        else:
+            break  # não há mais aprofundamento possível
+
+    # se terminamos numa lista, retornamos a folha com as probabilidades
+    if isinstance(contexto, list):
+        return contexto
+    # Caso contrário, o historico não existe na árvore
+    raise ValueError("Nenhum contexto encontrado.")
+
+
+def simular_vlmc(arvore, estados, T, pi, ordem_max):
+    # Passado inicial gerado da distribuição inicial
+    X = [np.random.choice(estados, p=pi) for _ in range(ordem_max)]
+
+    # Evolução da cadeia
+    for t in range(ordem_max, T):
+        historico = X[-ordem_max:]
+
+        # Encontramos as probs de transição com a função auxiliar
+        probs = achar_contexto(arvore, historico)
+
+        # Sorteamos o próximo estado segundo essa distribuição
+        proximo = np.random.choice(estados, p=probs)
+
+        # Acrescentamos à sequência
+        X.append(proximo)
+
+    return X
+
+
+estados = ["A", "B", "C"]
+pi = np.array([0.5, 0.3, 0.2])
+
+
+def contagem_contextos(historico, ordem_max):
+    contagens_transicao = {}
+
+    # Para cada posição no histórico:
+    for t in range(1, len(historico)):
+
+        # Registrando contextos de tamanho 1 até a ordem máxima da cadeia:
+        for k in range(1, min(ordem_max, t) + 1):
+
+            # contexto mais recente primeiro; últimos k estados:
+            contexto = tuple(reversed(historico[t - k:t]))
+
+            proximo_estado = historico[t]  # estado seguinte após contexto
+
+            if contexto not in contagens_transicao:
+                contagens_transicao[contexto] = {}
+
+            # adiciona 1 na contagem de vezes que 'proximo_estado' aparece após 'contexto'
+            contagens_transicao[contexto][proximo_estado] = (
+                    contagens_transicao[contexto].get(proximo_estado, 0) + 1
+            )
+
+    return contagens_transicao
 
 st.title("Variable Length Markov Chains (VLMC)")
 
@@ -18,9 +129,9 @@ with col2:
 with col3:
     st.button("Estimação", use_container_width=True,
               on_click=lambda: st.session_state.update(sec="Estimação"))
-with col3:
-    st.button("Representação", use_container_width=True,
-              on_click=lambda: st.session_state.update(sec="Representação"))
+with col4:
+    st.button("Verossimilhança", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="Verossimilhança"))
 
 sec = st.session_state.sec
 st.divider()
@@ -339,90 +450,7 @@ elif sec == "Simulação":
         language="python"
     )
 
-    historico = ["B", "C", "B", "A", "C", "A", "B", "C", "C", "A", "A", "B", "B", "C", "B"]
 
-    arvore = {
-
-        # Hoje é A
-        "A": [0.5, 0.3, 0.2],
-
-        # Hoje é B
-        "B": {
-
-            # Ontem foi C
-            "C": [0.2, 0.5, 0.3],
-            # Ontem foi B
-            "B": [0.3, 0.4, 0.3],
-            # Ontem foi A
-            "A": {
-                # Anteontem foi A:
-                "A": [0.7, 0.2, 0.1],
-                # Anteontem foi B:
-                "B": [0.4, 0.4, 0.2],
-                # Anteontem foi C:
-                "C": [0.5, 0.3, 0.2]
-            }
-        },
-
-        # Hoje é C
-        "C": {
-            # Ontem foi A
-            "A": [0.3, 0.4, 0.3],
-            # Ontem foi B
-            "B": [0.2, 0.5, 0.3],
-            # Ontem foi C
-            "C": [0.4, 0.3, 0.3]
-        }
-    }
-
-
-    def achar_contexto(arvore, historico):
-        contexto = arvore
-
-        # percorre do mais recente para o mais antigo.
-        # Se historico = [anteontem, ontem, hoje], então partimos de 'hoje' até 'anteontem'
-        for s in list(reversed(historico)):
-
-            # se já estamos numa folha → contexto encontrado, retona folha com probabilidades
-            if isinstance(contexto, list):
-                return contexto
-
-            # se existe ramo correspondente, desce a árvore (estado anterior) e retorna ao loop
-            if s in contexto:
-                contexto = contexto[s]
-            # se não existe ramo correspondente, sai do loop
-            else:
-                break  # não há mais aprofundamento possível
-
-        # se terminamos numa lista, retornamos a folha com as probabilidades
-        if isinstance(contexto, list):
-            return contexto
-        # Caso contrário, o historico não existe na árvore
-        raise ValueError("Nenhum contexto encontrado.")
-
-
-    def simular_vlmc(arvore, estados, T, pi, ordem_max):
-        # Passado inicial gerado da distribuição inicial
-        X = [np.random.choice(estados, p=pi) for _ in range(ordem_max)]
-
-        # Evolução da cadeia
-        for t in range(ordem_max, T):
-            historico = X[-ordem_max:]
-
-            # Encontramos as probs de transição com a função auxiliar
-            probs = achar_contexto(arvore, historico)
-
-            # Sorteamos o próximo estado segundo essa distribuição
-            proximo = np.random.choice(estados, p=probs)
-
-            # Acrescentamos à sequência
-            X.append(proximo)
-
-        return X
-
-
-    estados = ["A", "B", "C"]
-    pi = np.array([0.5, 0.3, 0.2])
     X = simular_vlmc(arvore, estados, T=20, pi=pi, ordem_max=4)
 
     indices = list(range(20))
@@ -489,50 +517,89 @@ elif sec == "Estimação":
 
     st.header("Probabilidades de transição")
 
-    st.markdown("""Agora, a partir do objeto **'contagens_transicao'** definido acima, vamos estimar as probabilidades de transição com 
+    st.markdown("""Agora, usando da função auxiliar **'contagem_contextos'** definida acima, vamos estimar as probabilidades de transição com 
     $$
     \\hat p(a \\mid c) = \\frac{N_{c,a}}{N_c}.
     $$
     """)
 
-    st.markdown(" A função **'estimar_probabilidades'** conta quantas vezes um contexto foi observado (loop externo), e quantas vezes cada estado foi observado após o contexto (loop interno)")
+    st.markdown("A baixo, a função **'estimar_probabilidades'** conta quantas vezes um contexto foi observado (loop externo), e quantas vezes cada estado foi observado após o contexto (loop interno)")
+    st.markdown("e retorna um dataframe com a contagem de quantas vezes ocorreu a transição de cada contexto para cada estado; o total de vezes que o contexto foi observado, e as probs de transição")
 
     st.code(
         """
-    def estimar_probabilidades(contagens_transicao):
+    def estimar_probabilidades(historico):
 
-        probabilidades = {}
+        linhas = []
+        contagens_transicao = contagem_contextos(historico, 3)
 
-        # Itera sobre pares (contexto, transicoes)
-        # Exemplo: ('B',) e {'A': 10, 'B': 5, 'C': 3}
         for contexto, transicoes in contagens_transicao.items():
 
-            # Total N(w) = soma das transições do contexto
             total = sum(transicoes.values())
 
-            probabilidades[contexto] = {}
-
-            # Itera sobre (estado, contagem) dentro do contexto
-            # Exemplo: ('A', 10), ('B', 5), ('C', 3)
             for estado, contagem in transicoes.items():
+                linhas.append({
+                    "contexto": contexto,
+                    "estado_seguinte": estado,
+                    "cont_estado_seguinte": contagem,
+                    "cont_total_contexto": total
+                })
 
-                probabilidades[contexto][estado] = contagem / total
+        df = pd.DataFrame(linhas)
+        df['prob_transicao'] = df['cont_estado_seguinte'] / df['cont_total_contexto']
 
-        return probabilidades
-
-
-    probs = estimar_probabilidades(contagens_transicao)
+        return df
+    
+df = estimar_probabilidades(historico)
         """,
         language="python"
     )
 
-    st.markdown("Dado que definimos o objeto **'probs'** acima, se observamos 'B' hoje, 'A' ontem e 'A' anteontem, a probabilidade de que amanhã seja 'A' é acessada dessa forma: ")
-    st.code("""
-    contexto = ['B', 'A', 'A']
-    contexto = tuple(contexto)
-    p = probs[contexto]['A']
-    print(p)
-    """)
+    st.warning(
+        "A função retorna todos os contextos existentes no histórico de tamanho até a ordem máxima definida, sem fazer nenhuma inferência sobre a árvore (se o contexto existe na árvore ou não).")
 
-elif sec == "Representação":
-    st.markdown("Dadas as funções de simulação do VLMC e de estimação das probabilidades de transição definidas anteriormente:")
+    st.divider()
+    st.markdown(
+        "Dada uma sequência de 60.000 estados ('historico') gerados pela árvore construída na parte de simulação, esse é o retorno da função **'estimar_probabilidades'** ")
+
+
+
+    historico = simular_vlmc(arvore, estados, T=50000, pi=pi, ordem_max=4)
+
+
+
+    def estimar_probabilidades(historico):
+
+        linhas = []
+        contagens_transicao = contagem_contextos(historico, 3)
+
+        for contexto, transicoes in contagens_transicao.items():
+
+            total = sum(transicoes.values())
+
+            for estado, contagem in transicoes.items():
+                linhas.append({
+                    "contexto": contexto,
+                    "estado_seguinte": estado,
+                    "cont_estado_seguinte": contagem,
+                    "cont_total_contexto": total
+                })
+
+        df = pd.DataFrame(linhas)
+        df['prob_transicao'] = df['cont_estado_seguinte'] / df['cont_total_contexto']
+
+        return df
+
+
+    df = estimar_probabilidades(historico)
+    st.dataframe(df)
+
+
+
+    st.success(
+        "Para os contextos existentes na árvore usada para a simulação, as estimativas das probs de transição foram aproximadamente iguais as probabilidades reais."
+    )
+
+
+elif sec == "Verossimilhança":
+    st.markdown("Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.")
