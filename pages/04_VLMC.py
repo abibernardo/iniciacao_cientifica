@@ -113,6 +113,8 @@ def contagem_contextos(historico, ordem_max):
 
     return contagens_transicao
 
+historico = simular_vlmc(arvore, estados, T=50000, pi=pi, ordem_max=4)
+
 st.title("Variable Length Markov Chains (VLMC)")
 
 if "sec" not in st.session_state:
@@ -564,7 +566,7 @@ df = estimar_probabilidades(historico)
 
 
 
-    historico = simular_vlmc(arvore, estados, T=50000, pi=pi, ordem_max=4)
+    
 
 
 
@@ -635,7 +637,7 @@ elif sec == "Verossimilhança":
 
         return df
 
-    df = estimar_probabilidades_com_verossimilhanca(X)
+    df = estimar_probabilidades_com_verossimilhanca(historico)
 
     st.markdown("**Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.**")
     st.header("Cálculo da Verossimilhança")
