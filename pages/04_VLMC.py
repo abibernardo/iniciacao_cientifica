@@ -602,4 +602,87 @@ df = estimar_probabilidades(historico)
 
 
 elif sec == "Verossimilhança":
-    st.markdown("Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.")
+
+    def estimar_probabilidades_com_verossimilhanca(X):
+
+        linhas = []
+        contagens_transicao = contagem_contextos(X, 3)
+
+        for contexto, transicoes in contagens_transicao.items():
+
+            total = sum(transicoes.values())
+
+            loglik_contexto = 0.0
+
+            for estado, contagem in transicoes.items():
+                prob = contagem / total
+                loglik_contexto += contagem * np.log(prob)
+
+                linhas.append({
+                    "contexto": contexto,
+                    "estado": estado,
+                    "contagem": contagem,
+                    "total_contexto": total,
+                    "probabilidade": prob
+                })
+
+            # adiciona a log-verossimilhança do contexto
+            for linha in linhas:
+                if linha["contexto"] == contexto:
+                    linha["verossimilhanca"] = loglik_contexto
+
+        df = pd.DataFrame(linhas)
+
+        return df
+
+    df = estimar_probabilidades_com_verossimilhanca(X)
+
+    st.markdown("**Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.**")
+    st.header("Cálculo da Verossimilhança")
+    st.markdown("Podemos acrescentar a verossimilhança de cada contexto na função **estimar_probabilidades**:")
+    st.code(
+        """
+def estimar_probabilidades_com_verossimilhanca(X):
+
+    linhas = []
+    contagens_transicao = contagem_contextos(X, 3)
+
+    for contexto, transicoes in contagens_transicao.items():
+
+        total = sum(transicoes.values())
+
+        loglik_contexto = 0.0
+
+        for estado, contagem in transicoes.items():
+
+            prob = contagem / total
+            loglik_contexto += contagem * np.log(prob)
+
+            linhas.append({
+                "contexto": contexto,
+                "estado": estado,
+                "contagem": contagem,
+                "total_contexto": total,
+                "probabilidade": prob
+            })
+
+        # adiciona a log-verossimilhança do contexto
+        for linha in linhas:
+            if linha["contexto"] == contexto:
+                linha["verossimilhanca"] = loglik_contexto
+
+    df = pd.DataFrame(linhas)
+
+    return df
+    
+    df = estimar_probabilidades_com_verossimilhanca(X)
+        """,
+        language="python"
+    )
+
+    st.dataframe(df)
+    st.divider()
+    st.markdown("Agrupando por contexto:")
+    st.code("df = df.groupby('contexto', as_index=False)['verossimilhanca'].mean()")
+    df = df.groupby('contexto', as_index=False)['verossimilhanca'].mean()
+    st.dataframe(df)
