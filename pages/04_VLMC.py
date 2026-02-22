@@ -2,42 +2,43 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import pandas as pd
+from scipy.stats import chi2
 
 historico = ["B", "C", "B", "A", "C", "A", "B", "C", "C", "A", "A", "B", "B", "C", "B"]
 
 arvore = {
 
-        # Hoje é A
-        "A": [0.5, 0.3, 0.2],
+    # Hoje é A
+    "A": [0.5, 0.3, 0.2],
 
-        # Hoje é B
-        "B": {
+    # Hoje é B
+    "B": {
 
-            # Ontem foi C
-            "C": [0.2, 0.5, 0.3],
-            # Ontem foi B
-            "B": [0.3, 0.4, 0.3],
-            # Ontem foi A
-            "A": {
-                # Anteontem foi A:
-                "A": [0.7, 0.2, 0.1],
-                # Anteontem foi B:
-                "B": [0.4, 0.4, 0.2],
-                # Anteontem foi C:
-                "C": [0.5, 0.3, 0.2]
-            }
-        },
-
-        # Hoje é C
-        "C": {
-            # Ontem foi A
-            "A": [0.3, 0.4, 0.3],
-            # Ontem foi B
-            "B": [0.2, 0.5, 0.3],
-            # Ontem foi C
-            "C": [0.4, 0.3, 0.3]
+        # Ontem foi C
+        "C": [0.2, 0.5, 0.3],
+        # Ontem foi B
+        "B": [0.3, 0.4, 0.3],
+        # Ontem foi A
+        "A": {
+            # Anteontem foi A:
+            "A": [0.7, 0.2, 0.1],
+            # Anteontem foi B:
+            "B": [0.4, 0.4, 0.2],
+            # Anteontem foi C:
+            "C": [0.5, 0.3, 0.2]
         }
+    },
+
+    # Hoje é C
+    "C": {
+        # Ontem foi A
+        "A": [0.3, 0.4, 0.3],
+        # Ontem foi B
+        "B": [0.2, 0.5, 0.3],
+        # Ontem foi C
+        "C": [0.4, 0.3, 0.3]
     }
+}
 
 
 def achar_contexto(arvore, historico):
@@ -112,6 +113,7 @@ def contagem_contextos(historico, ordem_max):
             )
 
     return contagens_transicao
+
 
 historico = simular_vlmc(arvore, estados, T=50000, pi=pi, ordem_max=4)
 
@@ -452,7 +454,6 @@ elif sec == "Simulação":
         language="python"
     )
 
-
     X = simular_vlmc(arvore, estados, T=20, pi=pi, ordem_max=4)
 
     indices = list(range(20))
@@ -477,10 +478,13 @@ elif sec == "Simulação":
 
 elif sec == "Estimação":
 
-    st.markdown("**Agora, vamos assumir que temos um histórico/sequência de estados gerados por uma VLMC desconhecida, e que queremos estimar as probs de transição.**")
+    st.markdown(
+        "**Agora, vamos assumir que temos um histórico/sequência de estados gerados por uma VLMC desconhecida, e que queremos estimar as probs de transição.**")
     st.header("Contagem de contextos e transições")
-    st.markdown("Definindo uma ordem máxima possível para a cadeia, a função **'contagem_contextos'** retorna quantas vezes cada contexto é seguido por cada estado no historico.")
-    st.markdown("Para cada posição no histórico (loop externo), de 1 até a ordem máxima (loop interno), a função registra o contexto observado, registra o estado observado após o contexto, e faz a contagem.")
+    st.markdown(
+        "Definindo uma ordem máxima possível para a cadeia, a função **'contagem_contextos'** retorna quantas vezes cada contexto é seguido por cada estado no historico.")
+    st.markdown(
+        "Para cada posição no histórico (loop externo), de 1 até a ordem máxima (loop interno), a função registra o contexto observado, registra o estado observado após o contexto, e faz a contagem.")
 
     st.code(
         """
@@ -525,8 +529,10 @@ elif sec == "Estimação":
     $$
     """)
 
-    st.markdown("A baixo, a função **'estimar_probabilidades'** conta quantas vezes um contexto foi observado (loop externo), e quantas vezes cada estado foi observado após o contexto (loop interno)")
-    st.markdown("e retorna um dataframe com a contagem de quantas vezes ocorreu a transição de cada contexto para cada estado; o total de vezes que o contexto foi observado, e as probs de transição")
+    st.markdown(
+        "A baixo, a função **'estimar_probabilidades'** conta quantas vezes um contexto foi observado (loop externo), e quantas vezes cada estado foi observado após o contexto (loop interno)")
+    st.markdown(
+        "e retorna um dataframe com a contagem de quantas vezes ocorreu a transição de cada contexto para cada estado; o total de vezes que o contexto foi observado, e as probs de transição")
 
     st.code(
         """
@@ -551,7 +557,7 @@ elif sec == "Estimação":
         df['prob_transicao'] = df['cont_estado_seguinte'] / df['cont_total_contexto']
 
         return df
-    
+
 df = estimar_probabilidades(historico)
         """,
         language="python"
@@ -563,11 +569,6 @@ df = estimar_probabilidades(historico)
     st.divider()
     st.markdown(
         "Dada uma sequência de 60.000 estados ('historico') gerados pela árvore construída na parte de simulação, esse é o retorno da função **'estimar_probabilidades'** ")
-
-
-
-    
-
 
 
     def estimar_probabilidades(historico):
@@ -596,8 +597,6 @@ df = estimar_probabilidades(historico)
     df = estimar_probabilidades(historico)
     st.dataframe(df)
 
-
-
     st.success(
         "Para os contextos existentes na árvore usada para a simulação, as estimativas das probs de transição foram aproximadamente iguais as probabilidades reais."
     )
@@ -605,86 +604,189 @@ df = estimar_probabilidades(historico)
 
 elif sec == "Verossimilhança":
 
-    def estimar_probabilidades_com_verossimilhanca(X):
-
+    def estimar_probabilidades(historico):
         linhas = []
-        contagens_transicao = contagem_contextos(X, 3)
+        contagens_transicao = contagem_contextos(historico, 3)
 
         for contexto, transicoes in contagens_transicao.items():
 
             total = sum(transicoes.values())
 
-            loglik_contexto = 0.0
-
             for estado, contagem in transicoes.items():
-                prob = contagem / total
-                loglik_contexto += contagem * np.log(prob)
-
                 linhas.append({
                     "contexto": contexto,
-                    "estado": estado,
-                    "contagem": contagem,
-                    "total_contexto": total,
-                    "probabilidade": prob
+                    "estado_seguinte": estado,
+                    "cont_estado_seguinte": contagem,
+                    "cont_total_contexto": total
                 })
 
-            # adiciona a log-verossimilhança do contexto
-            for linha in linhas:
-                if linha["contexto"] == contexto:
-                    linha["verossimilhanca"] = loglik_contexto
-
         df = pd.DataFrame(linhas)
+        df['prob_transicao'] = df['cont_estado_seguinte'] / df['cont_total_contexto']
 
         return df
 
-    df = estimar_probabilidades_com_verossimilhanca(historico)
 
-    st.markdown("**Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.**")
+    def teste_poda_contexto(df, contexto_longo, alpha, m):
+
+        # sufixo imediato (remove o estado mais antigo)
+        contexto_curto = contexto_longo[:-1]
+
+        # filtra dataframe
+        df_w = df[df["contexto"] == contexto_longo]
+        df_v = df[df["contexto"] == contexto_curto]
+
+        if df_w.empty or df_v.empty:
+            raise ValueError("Contexto ou sufixo não encontrado no dataframe.")
+
+        # ----------------------------
+        # 1) Log-verossimilhança do modelo completo (w)
+        # ℓ_w = Σ_a N_{w,a} log(N_{w,a}/N_w)
+        # ----------------------------
+
+        Nw = df_w["cont_total_contexto"].iloc[0]
+        ell_w = 0.0
+
+        for _, linha in df_w.iterrows():
+            Nwa = linha["cont_estado_seguinte"]
+            if Nwa > 0:
+                ell_w += Nwa * np.log(Nwa / Nw)
+
+        # ----------------------------
+        # 2) Log-verossimilhança do modelo reduzido (v)
+        # ℓ_v = Σ_a N_{w,a} log(N_{v,a}/N_v)
+        # ----------------------------
+
+        Nv = df_v["cont_total_contexto"].iloc[0]
+        ell_v = 0.0
+
+        for _, linha in df_w.iterrows():
+
+            estado = linha["estado_seguinte"]
+            Nwa = linha["cont_estado_seguinte"]
+
+            linha_v = df_v[df_v["estado_seguinte"] == estado]
+
+            if linha_v.empty:
+                continue
+
+            Nva = linha_v["cont_estado_seguinte"].iloc[0]
+
+            if Nva > 0:
+                ell_v += Nwa * np.log(Nva / Nv)
+
+        # ----------------------------
+        # 3) Estatística LR
+        # LR = 2(ℓ_w − ℓ_v)
+        # ----------------------------
+
+        LR = 2 * (ell_w - ell_v)
+
+        # graus de liberdade
+        df_graus = m - 1
+
+        p_value = 1 - chi2.cdf(LR, df=df_graus)
+
+        decisao = "manter contexto" if p_value < alpha else "podar contexto"
+
+        return {
+            "contexto_testado": contexto_longo,
+            "sufixo": contexto_curto,
+            "ell_w": ell_w,
+            "ell_v": ell_v,
+            "LR": LR,
+            "df": df_graus,
+            "p_value": p_value,
+            "decisao": decisao
+        }
+
+
+    df = estimar_probabilidades(historico)
+    poda_galho = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
+
+    st.markdown(
+        "**Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.**")
     st.header("Cálculo da Verossimilhança")
-    st.markdown("Podemos acrescentar a verossimilhança de cada contexto na função **estimar_probabilidades**:")
+    st.markdown("Podemos calcular a verossimilhança de cada contexto usando a função **estimar_probabilidades**,")
+    st.markdown("e realizar o teste de razão de verossimilhança para testar a significância de um contexto longo, com relação ao seu 'pai' (eliminando estado mais antigo)")
     st.code(
         """
-def estimar_probabilidades_com_verossimilhanca(X):
+def teste_poda_contexto(df, contexto_longo, alpha, m):
 
-    linhas = []
-    contagens_transicao = contagem_contextos(X, 3)
+    # sufixo imediato (remove o estado mais antigo)
+    contexto_curto = contexto_longo[:-1]
 
-    for contexto, transicoes in contagens_transicao.items():
+    # filtra dataframe
+    df_w = df[df["contexto"] == contexto_longo]
+    df_v = df[df["contexto"] == contexto_curto]
 
-        total = sum(transicoes.values())
+    if df_w.empty or df_v.empty:
+        raise ValueError("Contexto ou sufixo não encontrado no dataframe.")
 
-        loglik_contexto = 0.0
+    # ----------------------------
+    # 1) Log-verossimilhança do modelo completo (w)
+    # ℓ_w = Σ_a N_{w,a} log(N_{w,a}/N_w)
+    # ----------------------------
 
-        for estado, contagem in transicoes.items():
+    Nw = df_w["cont_total_contexto"].iloc[0]
+    ell_w = 0.0
 
-            prob = contagem / total
-            loglik_contexto += contagem * np.log(prob)
+    for _, linha in df_w.iterrows():
+        Nwa = linha["cont_estado_seguinte"]
+        if Nwa > 0:
+            ell_w += Nwa * np.log(Nwa / Nw)
 
-            linhas.append({
-                "contexto": contexto,
-                "estado": estado,
-                "contagem": contagem,
-                "total_contexto": total,
-                "probabilidade": prob
-            })
+    # ----------------------------
+    # 2) Log-verossimilhança do modelo reduzido (v)
+    # ℓ_v = Σ_a N_{w,a} log(N_{v,a}/N_v)
+    # ----------------------------
 
-        # adiciona a log-verossimilhança do contexto
-        for linha in linhas:
-            if linha["contexto"] == contexto:
-                linha["verossimilhanca"] = loglik_contexto
+    Nv = df_v["cont_total_contexto"].iloc[0]
+    ell_v = 0.0
 
-    df = pd.DataFrame(linhas)
+    for _, linha in df_w.iterrows():
 
-    return df
-    
-    df = estimar_probabilidades_com_verossimilhanca(X)
+        estado = linha["estado_seguinte"]
+        Nwa = linha["cont_estado_seguinte"]
+
+        linha_v = df_v[df_v["estado_seguinte"] == estado]
+
+        if linha_v.empty:
+            continue
+
+        Nva = linha_v["cont_estado_seguinte"].iloc[0]
+
+        if Nva > 0:
+            ell_v += Nwa * np.log(Nva / Nv)
+
+    # ----------------------------
+    # 3) Estatística LR
+    # LR = 2(ℓ_w − ℓ_v)
+    # ----------------------------
+
+    LR = 2 * (ell_w - ell_v)
+
+    # graus de liberdade
+    df_graus = m - 1
+
+    p_value = 1 - chi2.cdf(LR, df=df_graus)
+
+    decisao = "manter contexto" if p_value < alpha else "podar contexto"
+
+    return {
+        "contexto_testado": contexto_longo,
+        "sufixo": contexto_curto,
+        "ell_w": ell_w,
+        "ell_v": ell_v,
+        "LR": LR,
+        "df": df_graus,
+        "p_value": p_value,
+        "decisao": decisao
+    }
+
+df = estimar_probabilidades(X)
+poda_galho = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
         """,
         language="python"
     )
 
-    st.dataframe(df)
-    st.divider()
-    st.markdown("Agrupando por contexto:")
-    st.code("df = df.groupby('contexto', as_index=False)['verossimilhanca'].mean()")
-    df = df.groupby('contexto', as_index=False)['verossimilhanca'].mean()
-    st.dataframe(df)
+    st.write(poda_galho)
