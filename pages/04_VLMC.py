@@ -708,6 +708,15 @@ elif sec == "Verossimilhança":
     st.header("Cálculo da Verossimilhança")
     st.markdown("Podemos calcular a verossimilhança de cada contexto usando a função **estimar_probabilidades**,")
     st.markdown("e realizar o teste de razão de verossimilhança para testar a significância de um contexto longo, com relação ao seu 'pai' (eliminando estado mais antigo)")
+    st.markdown("""Lembrando que a log-verossimilhança de uma cadeia (que será calculada para o contexto fornecido e para seu sufixo) é
+    $$
+    \\ell(\\theta)
+    =
+    \\sum_{c \\in \\mathcal{A}^k}
+    \\sum_{a \\in \\mathcal{A}}
+    N_{c,a} \\, \\log \\frac{N_{c,a}}{N_c}
+    $$
+    """)
     st.code(
         """
 def teste_poda_contexto(df, contexto_longo, alpha, m):
@@ -788,5 +797,9 @@ poda_galho = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
         """,
         language="python"
     )
-
+    st.divider()
+    st.header("Resultado")
     st.write(poda_galho)
+    st.success(
+        "Função poda galhos de acordo com os contextos existentes na árvore usada para simulação"
+    )
