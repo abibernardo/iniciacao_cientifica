@@ -717,19 +717,19 @@ elif sec == "Verossimilhança":
     N_{c,a} \\, \\log \\frac{N_{c,a}}{N_c}
     $$
     """)
+
+    st.markdown("Abaixo, testo (B, A ) apenas contra (B, A, A) ")
+
     st.code(
         """
 def teste_poda_contexto(df, contexto_longo, alpha, m):
 
     # sufixo imediato (remove o estado mais antigo)
-    contexto_curto = contexto_longo[:-1]
+    sufixo = contexto_longo[:-1]
 
     # filtra dataframe
     df_w = df[df["contexto"] == contexto_longo]
-    df_v = df[df["contexto"] == contexto_curto]
-
-    if df_w.empty or df_v.empty:
-        raise ValueError("Contexto ou sufixo não encontrado no dataframe.")
+    df_v = df[df["contexto"] == sufixo]
 
     # ----------------------------
     # 1) Log-verossimilhança do modelo completo (w)
@@ -741,8 +741,7 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
 
     for _, linha in df_w.iterrows():
         Nwa = linha["cont_estado_seguinte"]
-        if Nwa > 0:
-            ell_w += Nwa * np.log(Nwa / Nw)
+        ell_w += Nwa * np.log(Nwa / Nw)
 
     # ----------------------------
     # 2) Log-verossimilhança do modelo reduzido (v)
@@ -759,13 +758,9 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
 
         linha_v = df_v[df_v["estado_seguinte"] == estado]
 
-        if linha_v.empty:
-            continue
-
         Nva = linha_v["cont_estado_seguinte"].iloc[0]
 
-        if Nva > 0:
-            ell_v += Nwa * np.log(Nva / Nv)
+        ell_v += Nwa * np.log(Nva / Nv)
 
     # ----------------------------
     # 3) Estatística LR
@@ -775,7 +770,7 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
     LR = 2 * (ell_w - ell_v)
 
     # graus de liberdade
-    df_graus = m - 1
+    df_graus = (m*(m-1))-(m - 1)
 
     p_value = 1 - chi2.cdf(LR, df=df_graus)
 
@@ -783,7 +778,7 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
 
     return {
         "contexto_testado": contexto_longo,
-        "sufixo": contexto_curto,
+        "sufixo": sufixo,
         "ell_w": ell_w,
         "ell_v": ell_v,
         "LR": LR,
@@ -793,7 +788,7 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
     }
 
 df = estimar_probabilidades(X)
-poda_galho = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
+poda_galho = teste_poda_contexto(df, ("B", "A", "A"), 0.05, 3)
         """,
         language="python"
     )
@@ -803,3 +798,5 @@ poda_galho = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
     st.success(
         "Função poda galhos de acordo com os contextos existentes na árvore usada para simulação"
     )
+
+    st.markdown("Agora, quero testar (B, A) contra todos os seus filhos (B, A, A), (B, A, B) e (B, A, C), somando as log-verossimilhanças")
