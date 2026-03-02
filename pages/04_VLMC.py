@@ -626,71 +626,65 @@ elif sec == "Verossimilhança":
         return df
 
 
+    df = estimar_probabilidades(historico)
+
+
     def teste_poda_contexto(df, contexto_longo, alpha, m):
-
         # sufixo imediato (remove o estado mais antigo)
-        contexto_curto = contexto_longo[:-1]
+        sufixo = contexto_longo[:-1]
 
-        # filtra dataframe
-        df_w = df[df["contexto"] == contexto_longo]
-        df_v = df[df["contexto"] == contexto_curto]
+        # filtra dataframe do sufixo
+        df_v = df[df["contexto"] == sufixo]
 
-        if df_w.empty or df_v.empty:
-            raise ValueError("Contexto ou sufixo não encontrado no dataframe.")
+        # encontra TODOS os contextos filhos do sufixo
+        contextos_filhos = [
+            c for c in df["contexto"].unique()
+            if len(c) == len(sufixo) + 1 and c[:-1] == sufixo
+        ]
 
         # ----------------------------
-        # 1) Log-verossimilhança do modelo completo (w)
-        # ℓ_w = Σ_a N_{w,a} log(N_{w,a}/N_w)
+        # 1) Log-verossimilhança do modelo completo (SOMA DOS FILHOS)
         # ----------------------------
 
-        Nw = df_w["cont_total_contexto"].iloc[0]
         ell_w = 0.0
 
-        for _, linha in df_w.iterrows():
-            Nwa = linha["cont_estado_seguinte"]
-            if Nwa > 0:
+        for contexto in contextos_filhos:
+
+            df_w = df[df["contexto"] == contexto]
+            Nw = df_w["cont_total_contexto"].iloc[0]
+
+            for _, linha in df_w.iterrows():
+                Nwa = linha["cont_estado_seguinte"]
                 ell_w += Nwa * np.log(Nwa / Nw)
 
         # ----------------------------
-        # 2) Log-verossimilhança do modelo reduzido (v)
-        # ℓ_v = Σ_a N_{w,a} log(N_{v,a}/N_v)
+        # 2) Log-verossimilhança do modelo reduzido
         # ----------------------------
 
         Nv = df_v["cont_total_contexto"].iloc[0]
         ell_v = 0.0
 
-        for _, linha in df_w.iterrows():
+        for _, linha in df_v.iterrows():
+            Nva = linha["cont_estado_seguinte"]
 
-            estado = linha["estado_seguinte"]
-            Nwa = linha["cont_estado_seguinte"]
-
-            linha_v = df_v[df_v["estado_seguinte"] == estado]
-
-            if linha_v.empty:
-                continue
-
-            Nva = linha_v["cont_estado_seguinte"].iloc[0]
-
-            if Nva > 0:
-                ell_v += Nwa * np.log(Nva / Nv)
+            ell_v += Nva * np.log(Nva / Nv)
 
         # ----------------------------
         # 3) Estatística LR
-        # LR = 2(ℓ_w − ℓ_v)
         # ----------------------------
 
         LR = 2 * (ell_w - ell_v)
 
-        # graus de liberdade
-        df_graus = m - 1
+        # graus de liberdade (mantido igual ao seu)
+        df_graus = (m * (m - 1)) - (m - 1)
 
         p_value = 1 - chi2.cdf(LR, df=df_graus)
 
         decisao = "manter contexto" if p_value < alpha else "podar contexto"
 
         return {
-            "contexto_testado": contexto_longo,
-            "sufixo": contexto_curto,
+            "sufixo_testado": sufixo,
+            "filhos_somados": contextos_filhos,
             "ell_w": ell_w,
             "ell_v": ell_v,
             "LR": LR,
@@ -699,9 +693,9 @@ elif sec == "Verossimilhança":
             "decisao": decisao
         }
 
-
     df = estimar_probabilidades(historico)
-    poda_galho = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
+    poda_galho = teste_poda_contexto(df, ("A",), 0.05, 3)
+
 
     st.markdown(
         "**Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.**")
@@ -718,7 +712,7 @@ elif sec == "Verossimilhança":
     $$
     """)
 
-    st.markdown("Abaixo, testo a verossimilhança do sufixo (B, A ) contra a soma das log-verossimilhanças de (B, A, A), (B, A, B) e (B, A, C)")
+    st.markdown("Abaixo, testo a verossimilhança do sufixo (B, A ) contra a soma das log-verossimilhanças de (B, C, A), (B, C, B) e (B, C, C)")
 
     st.code(
         """
@@ -790,7 +784,7 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
     }
 
 
-poda = teste_poda_contexto(X, ("B", "A", "A"), 0.05, 3)
+poda = teste_poda_contexto(df, ("B", "C", "A"), 0.05, 3)
 print(poda)
         """,
         language="python"
