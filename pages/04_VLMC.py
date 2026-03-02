@@ -684,7 +684,7 @@ elif sec == "Verossimilhança":
 
         return {
             "sufixo_testado": sufixo,
-            "filhos_somados": contextos_filhos,
+            "filhos": contextos_filhos,
             "ell_w": ell_w,
             "ell_v": ell_v,
             "LR": LR,
@@ -693,8 +693,7 @@ elif sec == "Verossimilhança":
             "decisao": decisao
         }
 
-    df = estimar_probabilidades(historico)
-    poda_galho = teste_poda_contexto(df, ("A",), 0.05, 3)
+
 
 
     st.markdown(
@@ -774,7 +773,7 @@ def teste_poda_contexto(df, contexto_longo, alpha, m):
 
     return {
         "sufixo_testado": sufixo,
-        "filhos_somados": contextos_filhos,
+        "filhos": contextos_filhos,
         "ell_w": ell_w,
         "ell_v": ell_v,
         "LR": LR,
@@ -791,6 +790,8 @@ print(poda)
     )
     st.divider()
     st.header("Resultado")
+    df = estimar_probabilidades(historico)
+    poda_galho = teste_poda_contexto(df, ("B","C", "A"), 0.05, 3)
     st.write(poda_galho)
     st.success(
         "Função poda galhos de acordo com os contextos existentes na árvore usada para simulação"
