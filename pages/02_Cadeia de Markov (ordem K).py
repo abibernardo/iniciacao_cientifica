@@ -352,11 +352,11 @@ elif sec == "Árvore":
 
     st.code("""
         for t in range(K, T):
-            contexto = tuple(X[-K:])
+            contexto = tuple(X[:K])   # primeiros K elementos
             x, y, z = contexto
-            probs = arvore[z][y][x]
+            probs = arvore[x][y][z]
             proximo = np.random.choice(estados, p=probs)
-            X.append(proximo)
+            X.insert(0, proximo)      # adiciona no início da lista
         """)
 
     arvore = {
@@ -424,11 +424,11 @@ elif sec == "Árvore":
     X = [np.random.choice(estados, p=pi) for _ in range(K)]
 
     for t in range(K, T):
-        contexto = tuple(X[-K:])
-        a, b, c = contexto
-        probs = arvore[a][b][c]
+        contexto = tuple(X[:K])   # primeiros K elementos
+        x, y, z = contexto
+        probs = arvore[x][y][z]
         proximo = np.random.choice(estados, p=probs)
-        X.append(proximo)
+        X.insert(0, proximo)      # adiciona no início da lista
 
     st.header("Trajetória Gerada pela Cadeia")
 
