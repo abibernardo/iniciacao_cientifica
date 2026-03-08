@@ -796,4 +796,103 @@ print(poda)
     st.success(
         "Função poda galhos de acordo com os contextos existentes na árvore usada para simulação"
     )
+    st.write("Agora, aplicamos essa função para testarmos todos os sufixos possíveis dentro da profundidade 3:")
 
+    st.code(
+        """
+def podar_arvore(df, alpha, m):
+    contextos = set(df["contexto"].unique())
+
+    # todos os sufixos possíveis
+    sufixos = {c[:-1] for c in contextos if len(c) > 1}
+
+    # testar primeiro os mais longos; substituir pra testar do mais curto ao mais longo?
+    sufixos_ordenados = sorted(sufixos, key=len, reverse=True)
+
+    contextos_restantes = set(contextos)
+    resultados = []
+
+    for sufixo in sufixos_ordenados:
+
+        filhos = [c for c in contextos_restantes if c[:-1] == sufixo]
+
+        if len(filhos) == 0:
+            continue
+
+        # pegar qualquer filho para chamar sua função
+        contexto_longo = filhos[0]  # ideia de simplificação: mudar função "Teste poda contexto" para ter o sufixo como argumento
+
+        resultado = teste_poda_contexto(df, contexto_longo, alpha, m)
+        resultados.append(resultado)
+
+        if resultado["decisao"] == "podar contexto":
+
+            for f in filhos:
+                contextos_restantes.discard(f) # se podar, descarta todos os filhos
+
+        else:
+            if sufixo in contextos_restantes:
+                contextos_restantes.discard(sufixo)  # Se não podar, descarta o sufixo como 'contexto mínimo'
+
+    return contextos_restantes, resultados
+
+
+contextos_finais, historico_podas = podar_arvore(df, 0.03, 3)
+        """,
+        language="python"
+    )
+
+    st.markdown("""'historico_podas' armazena o retorno da função **'teste_poda_contexto'** para cada sufixo, e o dicionário **'contextos_finais'** armazena os contextos mínimos significativos""")
+    st.write("No caso de nossa simulação, esses foram os contextos mínimos considerados significativos após a poda:")
+
+
+    def podar_arvore(df, alpha, m):
+        contextos = set(df["contexto"].unique())
+
+        # todos os sufixos possíveis
+        sufixos = {c[:-1] for c in contextos if len(c) > 1}
+
+        # testar primeiro os mais longos; substituir pra testar do mais curto ao mais longo?
+        sufixos_ordenados = sorted(sufixos, key=len, reverse=True)
+
+        contextos_restantes = set(contextos)
+        resultados = []
+
+        for sufixo in sufixos_ordenados:
+
+            filhos = [c for c in contextos_restantes if c[:-1] == sufixo]
+
+            if len(filhos) == 0:
+                continue
+
+            # pegar qualquer filho para chamar sua função
+            contexto_longo = filhos[
+                0]  # ideia de simplificação: mudar função "Teste poda contexto" para ter o sufixo como argumento
+
+            resultado = teste_poda_contexto(df, contexto_longo, alpha, m)
+            resultados.append(resultado)
+
+            if resultado["decisao"] == "podar contexto":
+
+                for f in filhos:
+                    contextos_restantes.discard(f)  # se podar, descarta todos os filhos
+
+            else:
+                if sufixo in contextos_restantes:
+                    contextos_restantes.discard(sufixo)  # Se não podar, descarta o sufixo como 'contexto mínimo'
+
+        return contextos_restantes, resultados
+
+
+    contextos_finais, historico_podas = podar_arvore(df, 0.03, 3)
+
+    contextos_legiveis = sorted(["".join(c) for c in contextos_finais])
+
+    df_contextos = pd.DataFrame({"Contexto": contextos_legiveis})
+
+    st.dataframe(df_contextos)
+
+    st.success(
+        "Os contextos mínimos são os mesmos contextos " 
+        "existentes na nossa árvore usada para simulação"
+    )
