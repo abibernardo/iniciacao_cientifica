@@ -452,7 +452,7 @@ elif sec == "Simulação":
 
     st.write("**Trajetória gerada pela VLMC**")
     T = st.slider("Número de passos (T)", 5, 50, 20)
-    X = simular_vlmc(arvore, estados, T, pi=pi, ordem_max=4)
+    X = simular_vlmc(arvore, estados, T, pi=pi, ordem_max=3)
 
     indices = list(range(T))
 
