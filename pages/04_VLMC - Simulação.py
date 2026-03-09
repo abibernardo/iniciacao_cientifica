@@ -445,7 +445,7 @@ elif sec == "Simulação":
 
     estados = ["A", "B", "C"]
     pi = np.array([0.5, 0.3, 0.2])
-    seq = simular_vlmc(arvore, estados, T=20, pi=pi, ordem_max=4)
+    seq = simular_vlmc(arvore, estados, T=20, pi=pi, ordem_max=3)
         """,
         language="python"
     )
