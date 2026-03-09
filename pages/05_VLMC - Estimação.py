@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import plotly.express as px
 import pandas as pd
 from scipy.stats import chi2
 
@@ -255,8 +254,8 @@ with col3:
     st.button("Estimação", use_container_width=True,
               on_click=lambda: st.session_state.update(sec="Estimação"))
 with col4:
-    st.button("Verossimilhança", use_container_width=True,
-              on_click=lambda: st.session_state.update(sec="Verossimilhança"))
+    st.button("TRV", use_container_width=True,
+              on_click=lambda: st.session_state.update(sec="TRV"))
 
 sec = st.session_state.sec
 st.divider()
@@ -415,7 +414,7 @@ df = estimar_probabilidades(historico)
     )
 
 
-elif sec == "Verossimilhança":
+elif sec == "TRV":
 
     st.markdown(
         "**Agora, partindo das contagens dos contextos, queremos podar os galhos e definir quais contextos existem na árvore real.**")
