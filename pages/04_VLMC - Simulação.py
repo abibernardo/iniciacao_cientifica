@@ -118,6 +118,7 @@ def contagem_contextos(historico, ordem_max):
 historico = simular_vlmc(arvore, estados, T=50000, pi=pi, ordem_max=4)
 
 st.title("Variable Length Markov Chains (VLMC)")
+st.write("Definição e simulação de uma Cadeia de Markov de Ordem Variável, usando a estrutura de uma árvore de contextos")
 
 if "sec" not in st.session_state:
     st.session_state.sec = "VLMC"
@@ -468,3 +469,5 @@ elif sec == "Simulação":
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+
