@@ -37,7 +37,7 @@ if sec == "Target: Normal":
     # ----------------------------
     # Algoritmo Metropolis-Hastings
     # ----------------------------
-    x_atual = 3.0
+    x_atual = 0.0
     amostras = []
     aceitos = 0
 
@@ -110,6 +110,70 @@ if sec == "Target: Normal":
     st.write("""
     Com o passo muito curto (~0.1) a cadeia não converge bem. Fica com a taxa de aceitação altíssima.
     """)
+
+    st.code("""
+    def target(x):
+        return np.exp(-x**2 / 2)
+
+    # ----------------------------
+    # Algoritmo Metropolis-Hastings
+    # ----------------------------
+
+    # valor inicial da cadeia
+    x_atual = 3.0
+
+    # lista que armazenará as amostras geradas
+    amostras = []
+
+    # contador de quantas propostas foram aceitas
+    aceitos = 0
+
+    # loop principal do algoritmo
+    for _ in range(n_iter):
+
+        # ----------------------------
+        # 1) Geração da proposta
+        # ----------------------------
+
+        # propõe um novo valor ao redor do estado atual
+        # usando uma uniforme no intervalo
+        # [x_atual - passo, x_atual + passo]
+        x_prop = np.random.uniform(x_atual - passo, x_atual + passo)
+
+        # ----------------------------
+        # 2) Probabilidade de aceitação
+        # ----------------------------
+
+        # calcula a razão entre a densidade no ponto proposto
+        # e a densidade no ponto atual
+        alpha = min(1, target(x_prop) / target(x_atual))
+
+        # ----------------------------
+        # 3) Aceita ou rejeita
+        # ----------------------------
+
+        # gera um número aleatório entre 0 e 1
+        # se for menor que alpha, aceita a proposta
+        if np.random.rand() < alpha:
+            x_atual = x_prop
+            aceitos += 1
+
+        # guarda o valor atual da cadeia
+        # (se rejeitou, repete o valor anterior)
+        amostras.append(x_atual)
+
+    # converte para array numpy
+    amostras = np.array(amostras)
+
+    # ----------------------------
+    # Burn-in
+    # ----------------------------
+
+    # remove as primeiras iterações,
+    # pois ainda podem estar influenciadas
+    # pelo valor inicial
+    amostras_final = amostras[burn_in:]
+    """, language="python")
 
 else:
     import streamlit as st
@@ -221,5 +285,76 @@ else:
     - Valor de aceitação = prob da dist target ter gerado o novo valor observado/ prob da dist target ter gerado o valor anterior
     - Se prob de ter gerado valor atual for MAIOR que de ter gerado valor antigo, aceita direto (razão maor que 1)
     - Se for menor, vira uma prob [0, 1]. Gera uniforme[0, 1]. Se valor de aceitação > uniforme, aceita novo valor. Caso contrário, nega.
+    - Se aceitar novo valor, usa a dist proposta pra gerar valor candidato a partir do novo valor aceito (com o tamanho do passo ditando o 'alcance' do sorteio
+    (no caso da Normal, e 'tamanho do passo' é a variancia)
     """)
+
+    st.code("""
+    def target_uniform(x):
+        return 1 if 0 <= x <= 1 else 0
+
+    # ----------------------------
+    # Algoritmo Metropolis-Hastings
+    # ----------------------------
+
+    # valor inicial dentro do suporte da uniforme
+    x_atual = 0.5
+
+    # lista para armazenar as amostras
+    amostras = []
+
+    # contador de aceitações
+    aceitos = 0
+
+    # loop principal
+    for _ in range(n_iter):
+
+        # ----------------------------
+        # 1) Geração da proposta
+        # ----------------------------
+
+        # proposta normal centrada no estado atual
+        x_prop = np.random.normal(x_atual, sigma)
+
+        # ----------------------------
+        # 2) Probabilidade de aceitação
+        # ----------------------------
+
+        # como a proposta é simétrica,
+        # a razão de Hastings simplifica para:
+        # alpha = pi(x') / pi(x_t)
+        #
+        # na uniforme:
+        # - dentro do intervalo [0,1], densidade = 1
+        # - fora do intervalo, densidade = 0
+
+        if 0 <= x_prop <= 1:
+            alpha = 1
+        else:
+            alpha = 0
+
+        # ----------------------------
+        # 3) Aceita ou rejeita
+        # ----------------------------
+
+        # se a proposta estiver dentro do suporte,
+        # ela é sempre aceita
+        if np.random.rand() < alpha:
+            x_atual = x_prop
+            aceitos += 1
+
+        # armazena o estado atual
+        # (repete se houve rejeição)
+        amostras.append(x_atual)
+
+    # converte para array
+    amostras = np.array(amostras)
+
+    # ----------------------------
+    # Burn-in
+    # ----------------------------
+
+    # remove as primeiras iterações
+    amostras_final = amostras[burn_in:]
+    """, language="python")
 
