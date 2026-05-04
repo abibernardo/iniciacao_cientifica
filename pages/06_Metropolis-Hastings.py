@@ -3,7 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 
 st.title("Metropolis-Hastings para Normal Padrão")
-st.divider()
+st.write("Ideia: complementar com mais explicações/simulação de MCMC; aprofundar no algoritmo")
 
 col1, col2 = st.columns(2)
 
@@ -18,6 +18,7 @@ with col2:
               on_click=lambda: st.session_state.update(sec="Target: Normal"))
 
 sec = st.session_state.sec
+st.divider()
 
 # =========================================================
 # CASO NORMAL (SIMULAÇÃO)
