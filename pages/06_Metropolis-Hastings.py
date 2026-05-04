@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.title("Metropolis-Hastings para Normal Padrão")
+st.title("Metropolis-Hastings")
 st.write("Ideia: complementar com mais explicações/simulação de MCMC; aprofundar no algoritmo")
 
 col1, col2 = st.columns(2)
