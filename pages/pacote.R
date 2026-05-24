@@ -125,24 +125,29 @@ probs6 <- list(
 # Atv: explorar as posteriores das árvores de exemplo
 # Usar função metropolis_vlmc
 
+# - Priori costuma penalizar profundidade/complexidade; sempre penalizar profundidade
+# Mudar prioris: penalizar mais e penalizar menos;
+
+
+
 
 # =========================================================
 # PRIORIS
 # =========================================================
 
-# Prior que favorece árvores rasas
+# Priori que favorece árvores rasas
 prior_raso <- function(node) {
-  exp(-5 * node$getDepth())
+  exp(-2 * node$getDepth())
 }
 
-# Prior neutro
+# Priori neutro
 prior_neutro <- function(node) {
   1
 }
 
-# Prior que favorece árvores profundas
+# Priori que favorece árvores profundas
 prior_profundo <- function(node) {
-  exp(node$getDepth())
+  exp(-1 * node$getDepth())
 }
 
 # =========================================================
@@ -159,6 +164,7 @@ analisar_arvore <- function(
     alfabeto,
     contexto,
     probs,
+    amostras,
     max_depth
 ) {
   
@@ -174,18 +180,18 @@ analisar_arvore <- function(
   set.seed(123)
   
   seq <- rvlmc(
-    1000,
+    amostras,
     alfabeto,
     contexto,
     probs
   )
   
   # =================================================
-  # PRIOR RASO
+  # PRIORI RASA
   # =================================================
   
   cat("\n")
-  cat("---------- PRIOR RASO ----------\n")
+  cat("---------- PRIORI RASO ----------\n")
   
   mh_raso <- metropolis_vlmc(
     seq,
@@ -203,7 +209,7 @@ analisar_arvore <- function(
   print(head(mh_raso$df, 5))
   
   # =================================================
-  # PRIOR NEUTRO
+  # PRIORI NEUTRO
   # =================================================
   
   cat("\n")
@@ -250,7 +256,7 @@ analisar_arvore <- function(
 
 
 # =========================================================
-# MODELO 1 — FÁCIL
+# MODELO 1 
 # =========================================================
 
 analisar_arvore(
@@ -262,13 +268,15 @@ analisar_arvore(
   
   probs = probs1,
   
+  amostras = 10000,
+  
   max_depth = 2
 )
 
 
 
 # =========================================================
-# MODELO 2 — BINÁRIO DIFÍCIL
+# MODELO 2 
 # =========================================================
 
 analisar_arvore(
@@ -286,7 +294,7 @@ analisar_arvore(
 
 
 # =========================================================
-# MODELO 3 — PROFUNDIDADE VARIÁVEL
+# MODELO 3 
 # =========================================================
 
 analisar_arvore(
@@ -304,7 +312,7 @@ analisar_arvore(
 
 
 # =========================================================
-# MODELO 4 — TRÊS SÍMBOLOS
+# MODELO 4 
 # =========================================================
 
 analisar_arvore(
@@ -322,7 +330,7 @@ analisar_arvore(
 
 
 # =========================================================
-# MODELO 5 — ÁRVORE PROFUNDA
+# MODELO 5 
 # =========================================================
 
 analisar_arvore(
@@ -352,5 +360,262 @@ analisar_arvore(
   
   probs = probs6,
   
+  amostras = 1000,
+  
   max_depth = 3
+)
+
+
+#############################################
+
+# =========================================================
+# FUNÇÃO DE DISTÂNCIA ENTRE ÁRVORES
+# =========================================================
+
+# Ideia:
+#
+# Cada árvore é representada pelo conjunto de contextos.
+#
+# A distância será baseada na diferença simétrica:
+#
+# A Δ B
+#
+# Ou seja:
+#
+# - contextos que existem em A mas não em B
+# - contextos que existem em B mas não em A
+#
+# ---------------------------------------------------------
+# Exemplo:
+#
+# árvore verdadeira:
+# "*.a" "*.b"
+#
+# árvore estimada:
+# "*.a.a" "*.a.b" "*.b"
+#
+# diferença:
+#
+# perde "*.a"
+# ganha "*.a.a"
+# ganha "*.a.b"
+#
+# distância = 3
+#
+# =========================================================
+
+
+distancia_arvores <- function(
+    arvore_estimada,
+    arvore_verdadeira
+) {
+  
+  # ------------------------------------------------------
+  # Transformar string em vetor de contextos
+  # ------------------------------------------------------
+  
+  parse_contextos <- function(x) {
+    
+    # remove chaves
+    x <- gsub("\\{", "", x)
+    x <- gsub("\\}", "", x)
+    
+    # separa por vírgula
+    x <- strsplit(x, ",")[[1]]
+    
+    # remove espaços
+    x <- trimws(x)
+    
+    x
+  }
+  
+  # ------------------------------------------------------
+  # Se vier string:
+  # "{*.a,*.b}"
+  # transformar em vetor
+  # ------------------------------------------------------
+  
+  if (length(arvore_estimada) == 1) {
+    arvore_estimada <- parse_contextos(arvore_estimada)
+  }
+  
+  if (length(arvore_verdadeira) == 1) {
+    arvore_verdadeira <- parse_contextos(arvore_verdadeira)
+  }
+  
+  # ------------------------------------------------------
+  # Diferença simétrica
+  # ------------------------------------------------------
+  
+  apenas_estimada <- setdiff(
+    arvore_estimada,
+    arvore_verdadeira
+  )
+  
+  apenas_verdadeira <- setdiff(
+    arvore_verdadeira,
+    arvore_estimada
+  )
+  
+  distancia <- length(apenas_estimada) +
+    length(apenas_verdadeira)
+  
+  
+  return(distancia)
+}
+
+
+
+# exemplos
+
+distancia_arvores(
+  "{*.a,*.b}",
+  "{*.a,*.b}"
+)
+
+
+distancia_arvores(
+  "{*.a.a,*.a.b,*.b}",
+  "{*.a,*.b}"
+)
+
+distancia_arvores(
+  "{*.a,*.b,*.c.a,*.c.b}",
+  "{*.a,*.b}"
+)
+
+
+############## Distância esperada
+
+
+
+
+# POSTERIORIS
+posterioris <- function(
+    alfabeto,
+    contexto,
+    probs,
+    amostras,
+    max_depth,
+    prior
+) {
+  
+  # ------------------------------------------------------
+  # Gerando sequência
+  # ------------------------------------------------------
+  
+  set.seed(123)
+  
+  seq <- rvlmc(
+    amostras,
+    alfabeto,
+    contexto,
+    probs
+  )
+  
+  # ------------------------------------------------------
+  # Rodando Metropolis-Hastings
+  # ------------------------------------------------------
+  
+  mh <- metropolis_vlmc(
+    
+    seq,
+    
+    n_steps = 5000,
+    
+    burnin = 1000,
+    
+    max_depth = max_depth,
+    
+    alpha = 0.5,
+    
+    context_weights = prior
+  )
+  
+  return(mh)
+}
+
+mh_raso <- posterioris(
+  
+  alfabeto = alfabeto1,
+  
+  contexto = contexto1,
+  
+  probs = probs1,
+  
+  amostras = 10000,
+  
+  max_depth = 2,
+  
+  prior = prior_raso
+)
+
+# --------------------------------------------------------
+# Rodando algoritmo com prior neutro
+# --------------------------------------------------------
+
+mh_neutro <- analisar_arvore(
+  
+  alfabeto = alfabeto1,
+  
+  contexto = contexto1,
+  
+  probs = probs1,
+  
+  amostras = 10000,
+  
+  max_depth = 2,
+  
+  prior = prior_neutro
+)
+
+# --------------------------------------------------------
+# Rodando algoritmo com prior profundo
+# --------------------------------------------------------
+
+mh_profundo <- analisar_arvore(
+  
+  alfabeto = alfabeto1,
+  
+  contexto = contexto1,
+  
+  probs = probs1,
+  
+  amostras = 10000,
+  
+  max_depth = 2,
+  
+  prior = prior_profundo
+)
+
+##### distancia poteriori esperada
+
+distancia_posterior_esperada <- function(
+    mh_result,
+    arvore_verdadeira
+) {
+  
+  df <- mh_result$df
+  
+  distancias <- sapply(
+    df$tree_contexts,
+    function(x) {
+      distancia_arvores(
+        x,
+        arvore_verdadeira
+      )
+    }
+  )
+  
+  soma <- sum(
+    distancias * df$prob
+  )
+  
+  return(soma)
+}
+
+
+distancia_posterior_esperada(
+  mh_raso,
+  "{*.a,*.b}"
 )
