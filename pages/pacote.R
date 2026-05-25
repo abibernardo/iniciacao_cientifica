@@ -159,6 +159,9 @@ prior_profundo <- function(node) {
 # 2. roda o Metropolis-Hastings
 # 3. imprime as árvores mais prováveis
 
+
+## Receber dados gerados pela árvore, ao invés de gerar dados dentro da função 
+
 analisar_arvore <- function(
     nome,
     alfabeto,
@@ -196,12 +199,12 @@ analisar_arvore <- function(
   mh_raso <- metropolis_vlmc(
     seq,
     
-    n_steps = 5000,
+    n_steps = 5000,   # usar como argumento da função 
     burnin = 1000,
     
     max_depth = max_depth,
     
-    alpha = 0.5,
+    alpha = 0.5,  # usar como argumento da função 
     
     context_weights = prior_raso
   )
@@ -458,7 +461,7 @@ distancia_arvores <- function(
   )
   
   distancia <- length(apenas_estimada) +
-    length(apenas_verdadeira)
+    length(apenas_verdadeira)  # dividir por tamanho do alfabeto + 1 (calcular a parte)
   
   
   return(distancia)
@@ -480,8 +483,8 @@ distancia_arvores(
 )
 
 distancia_arvores(
-  "{*.a,*.b,*.c.a,*.c.b}",
-  "{*.a,*.b}"
+  "{*.a,*.b,*.c.a,*.c.b,*.c.c}",
+  "{*.a,*.b,*.c}"
 )
 
 
@@ -619,3 +622,11 @@ distancia_posterior_esperada(
   mh_raso,
   "{*.a,*.b}"
 )
+
+
+
+#1. Gerar os dados vindos de várias árvores diferentes
+#2. Para cada sequência, testa diferentes prioris e alfas (alfas: 1, 0.5, 0.03, 0.001)
+#3. Compara distância esperada para cada caso (ver com calma)
+
+# OBS: Dividir distancia por (tamanho do alfabeto +1)
