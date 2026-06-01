@@ -222,7 +222,7 @@ distancia_arvores <- function(
   tamanho_alfabeto <- length(simbolos)
   
   distancia <- (length(apenas_estimada) +
-    length(apenas_verdadeira)) / tamanho_alfabeto  
+    length(apenas_verdadeira)) / (tamanho_alfabeto + 1)
   
   
   return(distancia)
@@ -297,7 +297,9 @@ calcular_distancia_posterior(
   priori = prior_raso
 )
 
-#1. Gerar os dados vindos de várias árvores diferentes
-#2. Para cada sequência, testa diferentes prioris e alfas (alfas: 1, 0.5, 0.03, 0.001)
-#3. Compara distância esperada para cada caso (ver com calma)
 
+# Lista de prioris, lista de alfas, e a sequência para cada modelo
+
+# Gerar duas sequências diferentes para o mesmo modelo para validar ranking das distancias posterioris
+# Para cada sequência gerada por modelo, para cada combinação alfa-priori, comparar a distância (tarefa!)
+# Usar  500 amostras com 100 de Burn-in 
