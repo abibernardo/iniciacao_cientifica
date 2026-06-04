@@ -112,6 +112,25 @@ probs6 <- list(
   c(0.4, 0.2, 0.2, 0.2)
 )
 
+
+# =========================================================
+# PRIORIS
+# =========================================================
+
+# Priori que favorece árvores rasas
+prior_raso <- function(node) {
+  exp(-2 * node$getDepth())
+}
+
+# Priori neutro
+prior_uniforme <- function(node) {
+  1
+}
+
+# Priori que favorece árvores profundas
+prior_profundo <- function(node) {
+  exp(-1 * node$getDepth())
+}
 #################################################
 #################################################
 
@@ -145,7 +164,7 @@ analisar_sequencia <- function(
     burnin = 1000
 ) {
   
-
+  
   
   posteriori <- metropolis_vlmc(
     seq,
@@ -199,7 +218,7 @@ distancia_arvores <- function(
     arvore_verdadeira <- parse_contextos(arvore_verdadeira)
   }
   
-
+  
   
   # ------------------------------------------------------
   # Diferença simétrica
@@ -222,7 +241,7 @@ distancia_arvores <- function(
   tamanho_alfabeto <- length(simbolos)
   
   distancia <- (length(apenas_estimada) +
-    length(apenas_verdadeira)) / (tamanho_alfabeto + 1)
+                  length(apenas_verdadeira)) / (tamanho_alfabeto + 1)
   
   
   return(distancia)
@@ -294,12 +313,150 @@ calcular_distancia_posterior(
   arvore_verdadeira = contexto1,
   alpha = 0.5,
   max_depth = 2,
-  priori = prior_raso
+  priori = prior_uniforme
 )
 
 
 # Lista de prioris, lista de alfas, e a sequência para cada modelo
 
+
+
+
 # Gerar duas sequências diferentes para o mesmo modelo para validar ranking das distancias posterioris
 # Para cada sequência gerada por modelo, para cada combinação alfa-priori, comparar a distância (tarefa!)
 # Usar  500 amostras com 100 de Burn-in 
+
+##################################################
+# LISTA DE PRIORIS
+##################################################
+
+lista_prioris <- list(
+  prior_raso = prior_raso,
+  prior_profundo = prior_profundo,
+  prior_uniforme = prior_uniforme
+)
+
+##################################################
+# LISTA DE ALPHAS
+##################################################
+
+lista_alphas <- c(
+  0.01,
+  0.1,
+  0.5,
+  1,
+  2
+)
+
+##################################################
+# MODELOS GERADORES
+##################################################
+
+modelos <- list(
+  modelo1 = list(
+    alfabeto = alfabeto1,
+    contexto = contexto1,
+    probs = probs1
+  ),
+  modelo2 = list(
+    alfabeto = alfabeto2,
+    contexto = contexto2,
+    probs = probs2
+  ),
+  modelo3 = list(
+    alfabeto = alfabeto3,
+    contexto = contexto3,
+    probs = probs3
+  ),
+  modelo4 = list(
+    alfabeto = alfabeto4,
+    contexto = contexts4,
+    probs = probs4
+  ),
+  modelo5 = list(
+    alfabeto = alfabeto5,
+    contexto = contexto5,
+    probs = probs5
+  ),
+  modelo6 = list(
+    alfabeto = alfabeto6,
+    contexto = contexto6,
+    probs = probs6
+  )
+)
+
+##################################################
+# GERAR UMA SEQUÊNCIA DE CADA MODELO
+##################################################
+
+sequencias <- lapply(
+  modelos,
+  function(mod) {
+    gerar_sequencia(
+      amostras = 500,
+      alfabeto = mod$alfabeto,
+      contexto = mod$contexto,
+      probs = mod$probs
+    )
+  }
+)
+
+##################################################
+# EXPERIMENTO
+##################################################
+
+resultado <- data.frame()
+
+for(nome_modelo in names(modelos)) {
+  
+  cat("Rodando", nome_modelo, "\n")
+  
+  seq <- sequencias[[nome_modelo]]
+  
+  arvore_verdadeira <- modelos[[nome_modelo]]$contexto
+  
+  max_depth <- max(
+    sapply(
+      arvore_verdadeira,
+      function(x) {
+        length(
+          strsplit(
+            sub("^\\*\\.", "", x),
+            "\\."
+          )[[1]]
+        )
+      }
+    )
+  )
+  
+  for(nome_priori in names(lista_prioris)) {
+    
+    priori <- lista_prioris[[nome_priori]]
+    
+    for(alpha in lista_alphas) {
+      
+      distancia <- calcular_distancia_posterior(
+        seq = seq,
+        arvore_verdadeira = arvore_verdadeira,
+        alpha = alpha,
+        max_depth = max_depth,
+        priori = priori,
+        n_steps = 500,
+        burnin = 100
+      )
+      
+      resultado <- rbind(
+        resultado,
+        data.frame(
+          modelo = nome_modelo,
+          priori = nome_priori,
+          alpha = alpha,
+          distancia = distancia
+        )
+      )
+      
+    }
+  }
+}
+
+resultado
