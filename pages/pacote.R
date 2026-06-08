@@ -460,3 +460,9 @@ for(nome_modelo in names(modelos)) {
 }
 
 resultado
+
+# 1. Mostrar que prioris diferentes tem desempenhos diferentes por modelo
+# Fixar modelo, eixo X: agrupando por priori e plotando alfas 
+# Ideia - reduzir números de modelos a princípio (manter árvore 6)
+# Acrescentar visualizações das árvores (ativar árvore) (plot da context tree ativa)
+# Aumentar tamanho da amostra (5.000)
