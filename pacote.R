@@ -344,8 +344,7 @@ lista_alphas <- c(
   0.01,
   0.1,
   0.5,
-  1,
-  2
+  1
 )
 
 ##################################################
@@ -353,21 +352,7 @@ lista_alphas <- c(
 ##################################################
 
 modelos <- list(
-  modelo1 = list(
-    alfabeto = alfabeto1,
-    contexto = contexto1,
-    probs = probs1
-  ),
-  modelo2 = list(
-    alfabeto = alfabeto2,
-    contexto = contexto2,
-    probs = probs2
-  ),
-  modelo3 = list(
-    alfabeto = alfabeto3,
-    contexto = contexto3,
-    probs = probs3
-  ),
+
   modelo4 = list(
     alfabeto = alfabeto4,
     contexto = contexts4,
@@ -461,8 +446,133 @@ for(nome_modelo in names(modelos)) {
 
 resultado
 
-# 1. Mostrar que prioris diferentes tem desempenhos diferentes por modelo
-# Fixar modelo, eixo X: agrupando por priori e plotando alfas 
-# Ideia - reduzir números de modelos a princípio (manter árvore 6)
-# Acrescentar visualizações das árvores (ativar árvore) (plot da context tree ativa)
-# Aumentar tamanho da amostra (5.000)
+### ÁRVORES
+
+##################################################
+# PLOTAR ÁRVORES VERDADEIRAS
+##################################################
+
+seq4 <- sequencias[["modelo4"]]
+
+ct <- ContextTree$new(
+  dataset = seq,
+  maximalDepth = 1,
+  alphabet = alfabeto4
+)
+
+ct$activateFromContexts(contexto1)
+
+plot(ct)
+
+seq2 <- sequencias[["modelo4"]]
+
+ct <- ContextTree$new(
+  dataset = seq,
+  maximalDepth = 1,
+  alphabet = alfabeto4
+)
+
+ct$activateFromContexts(contexto4)
+
+plot(ct)
+
+#################
+
+seq5 <- sequencias[["modelo5"]]
+
+ct <- ContextTree$new(
+  dataset = seq,
+  maximalDepth = 10,
+  alphabet = alfabeto5
+)
+
+ct$activateFromContexts(contexto5)
+
+plot(ct)
+
+seq2 <- sequencias[["modelo5"]]
+
+ct <- ContextTree$new(
+  dataset = seq,
+  maximalDepth = 10,
+  alphabet = alfabeto5
+)
+
+ct$activateFromContexts(contexto5)
+
+plot(ct)
+
+#################
+
+seq6 <- sequencias[["modelo6"]]
+
+ct <- ContextTree$new(
+  dataset = seq,
+  maximalDepth = 10,
+  alphabet = alfabeto6
+)
+
+ct$activateFromContexts(contexto6)
+
+plot(ct)
+
+seq2 <- sequencias[["modelo6"]]
+
+ct <- ContextTree$new(
+  dataset = seq,
+  maximalDepth = 10,
+  alphabet = alfabeto6
+)
+
+ct$activateFromContexts(contexto6)
+
+plot(ct)
+
+
+
+
+
+
+
+################
+#################
+
+# Visualizações
+library(ggplot2)
+
+
+
+
+
+
+ggplot(
+  resultado,
+  aes(
+    x = factor(alpha),
+    y = distancia,
+    color = priori,
+    group = priori
+  )
+) +
+  geom_line() +
+  geom_point(size = 2) +
+  facet_wrap(~ modelo) +
+  theme_minimal()
+
+
+ggplot(
+  resultado,
+  aes(
+    x = factor(alpha),
+    y = priori,
+    fill = distancia
+  )
+) +
+  geom_tile() +
+  facet_wrap(~ modelo) +
+  scale_fill_viridis_c() +
+  theme_minimal()
+
+
+
+
