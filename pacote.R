@@ -18,7 +18,7 @@ probs1 <- list(
 
 alfabeto4 <- c("a", "b")
 
-contexts4 <- c(
+contexto4 <- c(
   "*.a",
   "*.b"
 )
@@ -299,6 +299,15 @@ calcular_distancia_posterior <- function(
   
 }
 
+analisar_sequencia(
+  seq = seq4,
+  alpha = 0.5,
+  max_depth = 10,
+  priori = prior_uniforme,
+  n_steps = 5000,
+  burnin = 500
+)
+
 ############################################
 
 seq <- gerar_sequencia(
@@ -341,7 +350,6 @@ lista_prioris <- list(
 ##################################################
 
 lista_alphas <- c(
-  0.01,
   0.1,
   0.5,
   1
@@ -352,10 +360,10 @@ lista_alphas <- c(
 ##################################################
 
 modelos <- list(
-
+  
   modelo4 = list(
     alfabeto = alfabeto4,
-    contexto = contexts4,
+    contexto = contexto4,
     probs = probs4
   ),
   modelo5 = list(
@@ -378,7 +386,7 @@ sequencias <- lapply(
   modelos,
   function(mod) {
     gerar_sequencia(
-      amostras = 500,
+      amostras = 5000,
       alfabeto = mod$alfabeto,
       contexto = mod$contexto,
       probs = mod$probs
@@ -455,24 +463,24 @@ resultado
 seq4 <- sequencias[["modelo4"]]
 
 ct <- ContextTree$new(
-  dataset = seq,
-  maximalDepth = 1,
-  alphabet = alfabeto4
-)
-
-ct$activateFromContexts(contexto1)
-
-plot(ct)
-
-seq2 <- sequencias[["modelo4"]]
-
-ct <- ContextTree$new(
-  dataset = seq,
-  maximalDepth = 1,
+  dataset = seq4,
+  maximalDepth = 10,
   alphabet = alfabeto4
 )
 
 ct$activateFromContexts(contexto4)
+
+plot(ct)
+
+seq2 <- sequencias[["modelo2"]]
+
+ct <- ContextTree$new(
+  dataset = seq2,
+  maximalDepth = 10,
+  alphabet = alfabeto2
+)
+
+ct$activateFromContexts(contexto2)
 
 plot(ct)
 
@@ -481,7 +489,7 @@ plot(ct)
 seq5 <- sequencias[["modelo5"]]
 
 ct <- ContextTree$new(
-  dataset = seq,
+  dataset = seq5,
   maximalDepth = 10,
   alphabet = alfabeto5
 )
@@ -489,45 +497,6 @@ ct <- ContextTree$new(
 ct$activateFromContexts(contexto5)
 
 plot(ct)
-
-seq2 <- sequencias[["modelo5"]]
-
-ct <- ContextTree$new(
-  dataset = seq,
-  maximalDepth = 10,
-  alphabet = alfabeto5
-)
-
-ct$activateFromContexts(contexto5)
-
-plot(ct)
-
-#################
-
-seq6 <- sequencias[["modelo6"]]
-
-ct <- ContextTree$new(
-  dataset = seq,
-  maximalDepth = 10,
-  alphabet = alfabeto6
-)
-
-ct$activateFromContexts(contexto6)
-
-plot(ct)
-
-seq2 <- sequencias[["modelo6"]]
-
-ct <- ContextTree$new(
-  dataset = seq,
-  maximalDepth = 10,
-  alphabet = alfabeto6
-)
-
-ct$activateFromContexts(contexto6)
-
-plot(ct)
-
 
 
 
@@ -539,9 +508,6 @@ plot(ct)
 
 # Visualizações
 library(ggplot2)
-
-
-
 
 
 
@@ -560,6 +526,7 @@ ggplot(
   theme_minimal()
 
 
+
 ggplot(
   resultado,
   aes(
@@ -574,5 +541,11 @@ ggplot(
   theme_minimal()
 
 
+# Usar número de amostra no eixo X e usar alpha como nova dimensão (como linha)
+# Reduzir max_depth paa mais próximo do tamanho da árvore
 
+# Trocar árvore 6 para uma árvore mais complexa (mais profunda) de alfabeto tamanho 3
 
+# Tamanhos: 500, 1000, 3000, 5000, 10000
+
+# Gerar as probabilidades por um vetor uniforme dividido pela soma
