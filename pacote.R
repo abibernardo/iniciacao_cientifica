@@ -1,5 +1,7 @@
 library(bacontrees)
 
+
+
 # Arvores:
 
 alfabeto1 <- c("a", "b")
@@ -299,14 +301,7 @@ calcular_distancia_posterior <- function(
   
 }
 
-analisar_sequencia(
-  seq = seq4,
-  alpha = 0.5,
-  max_depth = 10,
-  priori = prior_uniforme,
-  n_steps = 5000,
-  burnin = 500
-)
+
 
 ############################################
 
@@ -356,6 +351,18 @@ lista_alphas <- c(
 )
 
 ##################################################
+# TAMANHOS DE AMOSTRA
+##################################################
+
+lista_amostras <- c(
+  500,
+  1000,
+  3000,
+  5000,
+  10000
+)
+
+##################################################
 # MODELOS GERADORES
 ##################################################
 
@@ -382,29 +389,11 @@ modelos <- list(
 # GERAR UMA SEQUÊNCIA DE CADA MODELO
 ##################################################
 
-sequencias <- lapply(
-  modelos,
-  function(mod) {
-    gerar_sequencia(
-      amostras = 5000,
-      alfabeto = mod$alfabeto,
-      contexto = mod$contexto,
-      probs = mod$probs
-    )
-  }
-)
-
-##################################################
-# EXPERIMENTO
-##################################################
-
 resultado <- data.frame()
 
 for(nome_modelo in names(modelos)) {
   
   cat("Rodando", nome_modelo, "\n")
-  
-  seq <- sequencias[[nome_modelo]]
   
   arvore_verdadeira <- modelos[[nome_modelo]]$contexto
   
@@ -422,32 +411,43 @@ for(nome_modelo in names(modelos)) {
     )
   )
   
-  for(nome_priori in names(lista_prioris)) {
+  for(amostras in lista_amostras){
     
-    priori <- lista_prioris[[nome_priori]]
+    seq <- gerar_sequencia(
+      amostras = amostras,
+      alfabeto = modelos[[nome_modelo]]$alfabeto,
+      contexto = modelos[[nome_modelo]]$contexto,
+      probs = modelos[[nome_modelo]]$probs
+    )
     
-    for(alpha in lista_alphas) {
+    for(nome_priori in names(lista_prioris)){
       
-      distancia <- calcular_distancia_posterior(
-        seq = seq,
-        arvore_verdadeira = arvore_verdadeira,
-        alpha = alpha,
-        max_depth = max_depth,
-        priori = priori,
-        n_steps = 500,
-        burnin = 100
-      )
+      priori <- lista_prioris[[nome_priori]]
       
-      resultado <- rbind(
-        resultado,
-        data.frame(
-          modelo = nome_modelo,
-          priori = nome_priori,
+      for(alpha in lista_alphas){
+        
+        distancia <- calcular_distancia_posterior(
+          seq = seq,
+          arvore_verdadeira = arvore_verdadeira,
           alpha = alpha,
-          distancia = distancia
+          max_depth = max_depth,
+          priori = priori,
+          n_steps = 500,
+          burnin = 100
         )
-      )
-      
+        
+        resultado <- rbind(
+          resultado,
+          data.frame(
+            modelo = nome_modelo,
+            amostras = amostras,
+            priori = nome_priori,
+            alpha = alpha,
+            distancia = distancia
+          )
+        )
+        
+      }
     }
   }
 }
@@ -455,52 +455,6 @@ for(nome_modelo in names(modelos)) {
 resultado
 
 ### ÁRVORES
-
-##################################################
-# PLOTAR ÁRVORES VERDADEIRAS
-##################################################
-
-seq4 <- sequencias[["modelo4"]]
-
-ct <- ContextTree$new(
-  dataset = seq4,
-  maximalDepth = 10,
-  alphabet = alfabeto4
-)
-
-ct$activateFromContexts(contexto4)
-
-plot(ct)
-
-seq2 <- sequencias[["modelo2"]]
-
-ct <- ContextTree$new(
-  dataset = seq2,
-  maximalDepth = 10,
-  alphabet = alfabeto2
-)
-
-ct$activateFromContexts(contexto2)
-
-plot(ct)
-
-#################
-
-seq5 <- sequencias[["modelo5"]]
-
-ct <- ContextTree$new(
-  dataset = seq5,
-  maximalDepth = 10,
-  alphabet = alfabeto5
-)
-
-ct$activateFromContexts(contexto5)
-
-plot(ct)
-
-
-
-
 
 
 ################
@@ -514,31 +468,23 @@ library(ggplot2)
 ggplot(
   resultado,
   aes(
-    x = factor(alpha),
+    x = amostras,
     y = distancia,
-    color = priori,
-    group = priori
+    color = factor(alpha),
+    group = alpha
   )
 ) +
   geom_line() +
   geom_point(size = 2) +
-  facet_wrap(~ modelo) +
-  theme_minimal()
-
-
-
-ggplot(
-  resultado,
-  aes(
-    x = factor(alpha),
-    y = priori,
-    fill = distancia
+  facet_grid(
+    modelo ~ priori
+  ) +
+  theme_minimal() +
+  labs(
+    color = expression(alpha),
+    x = "Número de amostras",
+    y = "Distância posterior esperada"
   )
-) +
-  geom_tile() +
-  facet_wrap(~ modelo) +
-  scale_fill_viridis_c() +
-  theme_minimal()
 
 
 # Usar número de amostra no eixo X e usar alpha como nova dimensão (como linha)
