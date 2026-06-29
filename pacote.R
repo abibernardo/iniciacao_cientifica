@@ -141,7 +141,7 @@ gerar_sequencia <- function(
     alfabeto,
     contexto,
     probs,
-    seed = 123
+    seed = 1
 ) {
   
   set.seed(seed)
@@ -432,7 +432,7 @@ for(nome_modelo in names(modelos)) {
           alpha = alpha,
           max_depth = max_depth,
           priori = priori,
-          n_steps = 500,
+          n_steps = 5000,  # aumentar
           burnin = 100
         )
         
@@ -487,11 +487,9 @@ ggplot(
   )
 
 
-# Usar número de amostra no eixo X e usar alpha como nova dimensão (como linha)
-# Reduzir max_depth paa mais próximo do tamanho da árvore
-
-# Trocar árvore 6 para uma árvore mais complexa (mais profunda) de alfabeto tamanho 3
-
-# Tamanhos: 500, 1000, 3000, 5000, 10000
 
 # Gerar as probabilidades por um vetor uniforme dividido pela soma
+
+# n_steps: aumentar para 5.000 e ver se resultados mudam muito; se ficarem iguais, nem precisa do boxplot
+# Se mudar: Gerar múltiplas vezes (2-3 réplicas); gerar dataframe
+# Gerar boxplot ao invés dos graficos de linha
