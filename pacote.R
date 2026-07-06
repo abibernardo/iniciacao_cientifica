@@ -1,6 +1,6 @@
 library(bacontrees)
 
-
+n_replicas <- 3
 
 # Arvores:
 
@@ -141,7 +141,7 @@ gerar_sequencia <- function(
     alfabeto,
     contexto,
     probs,
-    seed = 1
+    seed = 321
 ) {
   
   set.seed(seed)
@@ -413,83 +413,90 @@ for(nome_modelo in names(modelos)) {
   
   for(amostras in lista_amostras){
     
-    seq <- gerar_sequencia(
-      amostras = amostras,
-      alfabeto = modelos[[nome_modelo]]$alfabeto,
-      contexto = modelos[[nome_modelo]]$contexto,
-      probs = modelos[[nome_modelo]]$probs
-    )
-    
-    for(nome_priori in names(lista_prioris)){
+    for(replica in 1:n_replicas){
       
-      priori <- lista_prioris[[nome_priori]]
+      seq <- gerar_sequencia(
+        amostras = amostras,
+        alfabeto = modelos[[nome_modelo]]$alfabeto,
+        contexto = modelos[[nome_modelo]]$contexto,
+        probs = modelos[[nome_modelo]]$probs,
+        seed = 321 + replica
+      )
       
-      for(alpha in lista_alphas){
+      for(nome_priori in names(lista_prioris)){
         
-        distancia <- calcular_distancia_posterior(
-          seq = seq,
-          arvore_verdadeira = arvore_verdadeira,
-          alpha = alpha,
-          max_depth = max_depth,
-          priori = priori,
-          n_steps = 5000,  # aumentar
-          burnin = 100
-        )
+        priori <- lista_prioris[[nome_priori]]
         
-        resultado <- rbind(
-          resultado,
-          data.frame(
-            modelo = nome_modelo,
-            amostras = amostras,
-            priori = nome_priori,
+        for(alpha in lista_alphas){
+          
+          distancia <- calcular_distancia_posterior(
+            seq = seq,
+            arvore_verdadeira = arvore_verdadeira,
             alpha = alpha,
-            distancia = distancia
+            max_depth = max_depth,
+            priori = priori,
+            n_steps = 5000,
+            burnin = 100
           )
-        )
+          
+          resultado <- rbind(
+            resultado,
+            data.frame(
+              modelo = nome_modelo,
+              amostras = amostras,
+              replica = replica,
+              priori = nome_priori,
+              alpha = alpha,
+              distancia = distancia
+            )
+          )
+          
+        }
         
       }
+      
     }
+    
   }
-}
-
-resultado
-
-### ÁRVORES
-
-
-################
-#################
-
-# Visualizações
-library(ggplot2)
-
-
-
-ggplot(
-  resultado,
-  aes(
-    x = amostras,
-    y = distancia,
-    color = factor(alpha),
-    group = alpha
-  )
-) +
-  geom_line() +
-  geom_point(size = 2) +
-  facet_grid(
-    modelo ~ priori
+  
+  resultado
+  
+  ### ÁRVORES
+  
+  
+  ################
+  #################
+  
+  # Visualizações
+  library(ggplot2)
+  
+  
+  
+  ggplot(
+    resultado,
+    aes(
+      x = factor(amostras),
+      y = distancia,
+      fill = factor(alpha)
+    )
   ) +
-  theme_minimal() +
-  labs(
-    color = expression(alpha),
-    x = "Número de amostras",
-    y = "Distância posterior esperada"
-  )
-
-
-
-# Gerar as probabilidades por um vetor uniforme dividido pela soma
-
-# n_steps: aumentar para 5.000 e ver se resultados mudam muito; se ficarem iguais, nem precisa do boxplot
-# Se mudar: Gerar múltiplas vezes (2-3 réplicas); gerar dataframe
-# Gerar boxplot ao invés dos graficos de linha
+    geom_boxplot(
+      position = position_dodge(0.8)
+    ) +
+    facet_grid(
+      modelo ~ priori
+    ) +
+    theme_minimal() +
+    labs(
+      fill = expression(alpha),
+      x = "Número de amostras",
+      y = "Distância posterior esperada"
+    )
+  
+  
+  
+  # Gerar as probabilidades por um vetor uniforme dividido pela soma
+  
+  # n_steps: aumentar para 5.000 e ver se resultados mudam muito; se ficarem iguais, nem precisa do boxplot
+  # Se mudar: Gerar múltiplas vezes (2-3 réplicas); gerar dataframe
+  # Gerar boxplot ao invés dos graficos de linha
