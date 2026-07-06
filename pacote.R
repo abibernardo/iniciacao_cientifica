@@ -394,19 +394,16 @@ for(nome_modelo in names(modelos)) {
     
     cat("  Amostras:", amostras, "\n")
     
+    seq <- gerar_sequencia(
+      amostras = amostras,
+      alfabeto = modelos[[nome_modelo]]$alfabeto,
+      contexto = modelos[[nome_modelo]]$contexto,
+      probs = modelos[[nome_modelo]]$probs,
+      seed = 321 + replica
+    )
+    
     for(replica in 1:n_replicas){
       
-      cat("    Replica:", replica, "\n")
-      
-      seq <- gerar_sequencia(
-        amostras = amostras,
-        alfabeto = modelos[[nome_modelo]]$alfabeto,
-        contexto = modelos[[nome_modelo]]$contexto,
-        probs = modelos[[nome_modelo]]$probs,
-        seed = 321 + replica
-      )
-      
-      cat("      Sequência gerada\n")
       
       for(nome_priori in names(lista_prioris)){
         
@@ -447,42 +444,44 @@ for(nome_modelo in names(modelos)) {
     }
   }
 }
-  
-resultado
-  
 
-  #################
-  
-  # Visualizações
-  library(ggplot2)
-  
-  
-  
-  ggplot(
-    resultado,
-    aes(
-      x = factor(amostras),
-      y = distancia,
-      fill = factor(alpha)
-    )
+resultado
+
+
+#################
+
+# Visualizações
+library(ggplot2)
+
+
+
+ggplot(
+  resultado,
+  aes(
+    x = factor(amostras),
+    y = distancia,
+    fill = factor(alpha)
+  )
+) +
+  geom_boxplot(
+    position = position_dodge(0.8)
   ) +
-    geom_boxplot(
-      position = position_dodge(0.8)
-    ) +
-    facet_grid(
-      modelo ~ priori
-    ) +
-    theme_minimal() +
-    labs(
-      fill = expression(alpha),
-      x = "Número de amostras",
-      y = "Distância posterior esperada"
-    )
-  
-  
-  
-  # Gerar as probabilidades por um vetor uniforme dividido pela soma
-  
-  # n_steps: aumentar para 5.000 e ver se resultados mudam muito; se ficarem iguais, nem precisa do boxplot
-  # Se mudar: Gerar múltiplas vezes (2-3 réplicas); gerar dataframe
-  # Gerar boxplot ao invés dos graficos de linha
+  facet_grid(
+    modelo ~ priori
+  ) +
+  theme_minimal() +
+  labs(
+    fill = expression(alpha),
+    x = "Número de amostras",
+    y = "Distância posterior esperada"
+  )
+
+
+# Gerar apenas para Uniforme; Comparar com as probabilidades exatas do metropolis
+# Active trees probabilities -> posteriori exata
+
+# Savar dataframe de resultados (!) Salvar em RDS
+
+# Comparar probabilidades de uma única árvore, a priori uniforme -> probabilidades reais com o Metropolis
+# (Ativar árvores) (o quanto o metropolis erra)
+# Para cada árvore: Valor absoluto do exato - Metropolis / exato 
