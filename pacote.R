@@ -305,20 +305,7 @@ calcular_distancia_posterior <- function(
 
 ############################################
 
-seq <- gerar_sequencia(
-  amostras = 10000,
-  alfabeto = alfabeto1,
-  contexto = contexto1,
-  probs = probs1
-)
 
-calcular_distancia_posterior(
-  seq = seq,
-  arvore_verdadeira = contexto1,
-  alpha = 0.5,
-  max_depth = 2,
-  priori = prior_uniforme
-)
 
 
 # Lista de prioris, lista de alfas, e a sequência para cada modelo
@@ -393,27 +380,23 @@ resultado <- data.frame()
 
 for(nome_modelo in names(modelos)) {
   
-  cat("Rodando", nome_modelo, "\n")
+  cat("Modelo:", nome_modelo, "\n")
   
   arvore_verdadeira <- modelos[[nome_modelo]]$contexto
   
   max_depth <- max(
-    sapply(
-      arvore_verdadeira,
-      function(x) {
-        length(
-          strsplit(
-            sub("^\\*\\.", "", x),
-            "\\."
-          )[[1]]
-        )
-      }
-    )
+    sapply(arvore_verdadeira, function(x){
+      length(strsplit(sub("^\\*\\.", "", x), "\\.")[[1]])
+    })
   )
   
   for(amostras in lista_amostras){
     
+    cat("  Amostras:", amostras, "\n")
+    
     for(replica in 1:n_replicas){
+      
+      cat("    Replica:", replica, "\n")
       
       seq <- gerar_sequencia(
         amostras = amostras,
@@ -423,11 +406,17 @@ for(nome_modelo in names(modelos)) {
         seed = 321 + replica
       )
       
+      cat("      Sequência gerada\n")
+      
       for(nome_priori in names(lista_prioris)){
+        
+        cat("        Priori:", nome_priori, "\n")
         
         priori <- lista_prioris[[nome_priori]]
         
         for(alpha in lista_alphas){
+          
+          cat("          alpha =", alpha, "\n")
           
           distancia <- calcular_distancia_posterior(
             seq = seq,
@@ -451,20 +440,17 @@ for(nome_modelo in names(modelos)) {
             )
           )
           
+          cat("          Linha adicionada\n")
+          
         }
-        
       }
-      
     }
-    
   }
+}
   
-  resultado
+resultado
   
-  ### ÁRVORES
-  
-  
-  ################
+
   #################
   
   # Visualizações
