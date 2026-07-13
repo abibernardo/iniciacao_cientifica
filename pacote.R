@@ -394,16 +394,19 @@ for(nome_modelo in names(modelos)) {
     
     cat("  Amostras:", amostras, "\n")
     
-    seq <- gerar_sequencia(
-      amostras = amostras,
-      alfabeto = modelos[[nome_modelo]]$alfabeto,
-      contexto = modelos[[nome_modelo]]$contexto,
-      probs = modelos[[nome_modelo]]$probs,
-      seed = 321 + replica
-    )
-    
     for(replica in 1:n_replicas){
       
+      cat("    Replica:", replica, "\n")
+      
+      seq <- gerar_sequencia(
+        amostras = amostras,
+        alfabeto = modelos[[nome_modelo]]$alfabeto,
+        contexto = modelos[[nome_modelo]]$contexto,
+        probs = modelos[[nome_modelo]]$probs,
+        seed = 321 + replica
+      )
+      
+      cat("      Sequência gerada\n")
       
       for(nome_priori in names(lista_prioris)){
         
@@ -477,11 +480,57 @@ ggplot(
   )
 
 
-# Gerar apenas para Uniforme; Comparar com as probabilidades exatas do metropolis
-# Active trees probabilities -> posteriori exata
 
-# Savar dataframe de resultados (!) Salvar em RDS
+# Gerar as probabilidades por um vetor uniforme dividido pela soma
 
-# Comparar probabilidades de uma única árvore, a priori uniforme -> probabilidades reais com o Metropolis
-# (Ativar árvores) (o quanto o metropolis erra)
-# Para cada árvore: Valor absoluto do exato - Metropolis / exato 
+# n_steps: aumentar para 5.000 e ver se resultados mudam muito; se ficarem iguais, nem precisa do boxplot
+# Se mudar: Gerar múltiplas vezes (2-3 réplicas); gerar dataframe
+# Gerar boxplot ao invés dos graficos de linha
+
+##################################################
+# SALVAR RESULTADOS EM ARQUIVO RDS
+##################################################
+
+# Cria a pasta "resultados" caso ela não exista
+if (!dir.exists("resultados")) {
+  dir.create("resultados")
+}
+
+# Nome do arquivo com data e hora
+nome_arquivo <- paste0(
+  "resultado_",
+  format(Sys.time(), "%Y%m%d_%H%M%S"),
+  ".rds"
+)
+
+# Caminho completo
+caminho_arquivo <- file.path("resultados", nome_arquivo)
+
+# Salva o data.frame
+saveRDS(resultado, file = caminho_arquivo)
+
+# Mensagem de confirmação
+cat("\n=========================================\n")
+cat("Resultado salvo com sucesso em:\n")
+cat(normalizePath(caminho_arquivo), "\n")
+cat("=========================================\n")
+
+#resultado <- readRDS("resultados/resultado_20260712_221530.rds")
+
+
+ggplot(
+  resultado,
+  aes(
+    x = factor(amostras),
+    y = distancia,
+    colour = factor(alpha)
+  )
+) +
+  geom_point(
+    position = position_jitterdodge(
+      jitter.width = 0.05,
+      dodge.width = 0.8
+    ),
+    size = 2
+  ) +
+  facet_grid(modelo ~ priori)
