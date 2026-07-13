@@ -534,3 +534,9 @@ ggplot(
     size = 2
   ) +
   facet_grid(modelo ~ priori)
+
+
+# Fazer replicações para a mesma sequência !!!
+# Loop de modelo -> loop gerando a sequencia -> restante!! 
+# Alterar ordem dos loops!
+# Não gerar uma sequencia diferente para cada replicação 
