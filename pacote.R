@@ -378,45 +378,60 @@ modelos <- list(
 
 resultado <- data.frame()
 
-for(nome_modelo in names(modelos)) {
+for (nome_modelo in names(modelos)) {
   
   cat("Modelo:", nome_modelo, "\n")
   
   arvore_verdadeira <- modelos[[nome_modelo]]$contexto
   
   max_depth <- max(
-    sapply(arvore_verdadeira, function(x){
+    sapply(arvore_verdadeira, function(x) {
       length(strsplit(sub("^\\*\\.", "", x), "\\.")[[1]])
     })
   )
   
-  for(amostras in lista_amostras){
+  for (amostras in lista_amostras) {
     
     cat("  Amostras:", amostras, "\n")
     
-    for(replica in 1:n_replicas){
+    ##################################################
+    # GERAÇÃO DAS SEQUÊNCIAS
+    ##################################################
+    
+    sequencias <- vector("list", n_replicas)
+    
+    for (replica in 1:n_replicas) {
       
-      cat("    Replica:", replica, "\n")
+      cat("    Gerando sequência da réplica:", replica, "\n")
       
-      seq <- gerar_sequencia(
+      sequencias[[replica]] <- gerar_sequencia(
         amostras = amostras,
         alfabeto = modelos[[nome_modelo]]$alfabeto,
         contexto = modelos[[nome_modelo]]$contexto,
         probs = modelos[[nome_modelo]]$probs,
         seed = 321 + replica
       )
+    }
+    
+    ##################################################
+    # ANÁLISE DAS SEQUÊNCIAS
+    ##################################################
+    
+    for (replica in 1:n_replicas) {
       
-      cat("      Sequência gerada\n")
+      cat("    Analisando réplica:", replica, "\n")
       
-      for(nome_priori in names(lista_prioris)){
+      seq <- sequencias[[replica]]
+      
+      for (nome_priori in names(lista_prioris)) {
         
-        cat("        Priori:", nome_priori, "\n")
+        cat("      Priori:", nome_priori, "\n")
         
         priori <- lista_prioris[[nome_priori]]
         
-        for(alpha in lista_alphas){
+        for (alpha in lista_alphas) {
           
-          cat("          alpha =", alpha, "\n")
+          cat("        alpha =", alpha, "\n")
           
           distancia <- calcular_distancia_posterior(
             seq = seq,
@@ -440,8 +455,7 @@ for(nome_modelo in names(modelos)) {
             )
           )
           
-          cat("          Linha adicionada\n")
-          
+          cat("        Linha adicionada\n")
         }
       }
     }
