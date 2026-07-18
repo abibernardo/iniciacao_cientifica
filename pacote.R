@@ -390,48 +390,47 @@ for (nome_modelo in names(modelos)) {
     })
   )
   
+  ##################################################
+  # GERA UMA ÚNICA SEQUÊNCIA PARA O MODELO
+  ##################################################
+  
+  seq_completa <- gerar_sequencia(
+    amostras = max(lista_amostras),
+    alfabeto = modelos[[nome_modelo]]$alfabeto,
+    contexto = modelos[[nome_modelo]]$contexto,
+    probs = modelos[[nome_modelo]]$probs,
+    seed = 321
+  )
+  
+  cat("  Sequência completa gerada\n")
+  
+  ##################################################
+  # TAMANHOS DE AMOSTRA
+  ##################################################
+  
   for (amostras in lista_amostras) {
     
     cat("  Amostras:", amostras, "\n")
     
-    ##################################################
-    # GERAÇÃO DAS SEQUÊNCIAS
-    ##################################################
+    # Usa apenas o prefixo da sequência
+    seq <- seq_completa[1:amostras]
     
-    sequencias <- vector("list", n_replicas)
-    
-    for (replica in 1:n_replicas) {
+    for (nome_priori in names(lista_prioris)) {
       
-      cat("    Gerando sequência da réplica:", replica, "\n")
+      cat("    Priori:", nome_priori, "\n")
       
-      sequencias[[replica]] <- gerar_sequencia(
-        amostras = amostras,
-        alfabeto = modelos[[nome_modelo]]$alfabeto,
-        contexto = modelos[[nome_modelo]]$contexto,
-        probs = modelos[[nome_modelo]]$probs,
-        seed = 321 + replica
-      )
-    }
-    
-    ##################################################
-    # ANÁLISE DAS SEQUÊNCIAS
-    ##################################################
-    
-    for (replica in 1:n_replicas) {
+      priori <- lista_prioris[[nome_priori]]
       
-      cat("    Analisando réplica:", replica, "\n")
-      
-      seq <- sequencias[[replica]]
-      
-      for (nome_priori in names(lista_prioris)) {
+      for (alpha in lista_alphas) {
         
-        cat("      Priori:", nome_priori, "\n")
+        cat("      alpha =", alpha, "\n")
         
-        priori <- lista_prioris[[nome_priori]]
-        
-        for (alpha in lista_alphas) {
+        for (replica in 1:n_replicas) {
           
-          cat("        alpha =", alpha, "\n")
+          cat("        Replica:", replica, "\n")
+          
+          # Seed apenas para o MCMC
+          set.seed(1000 + replica)
           
           distancia <- calcular_distancia_posterior(
             seq = seq,
