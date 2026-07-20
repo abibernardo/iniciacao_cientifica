@@ -550,4 +550,10 @@ ggplot(
 
 
 
+
+
 # Não gerar uma sequencia diferente para cada replicação 
+
+# Comparar posterioris do modelo 4, priori uniforme 
+# Acresentar n = 20.000
+# Desenhar árvore 
