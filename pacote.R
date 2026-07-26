@@ -322,8 +322,8 @@ calcular_distancia_posterior <- function(
 ##################################################
 
 lista_prioris <- list(
-  prior_raso = prior_raso,
-  prior_profundo = prior_profundo,
+  prior_penalizacao_forte = prior_raso,
+  priori_penalizacao_fraca = prior_profundo,
   prior_uniforme = prior_uniforme
 )
 
@@ -346,7 +346,8 @@ lista_amostras <- c(
   1000,
   3000,
   5000,
-  10000
+  10000,
+  20000
 )
 
 ##################################################
@@ -355,17 +356,17 @@ lista_amostras <- c(
 
 modelos <- list(
   
-  modelo4 = list(
+  modelo_1 = list(
     alfabeto = alfabeto4,
     contexto = contexto4,
     probs = probs4
   ),
-  modelo5 = list(
+  modelo_2 = list(
     alfabeto = alfabeto5,
     contexto = contexto5,
     probs = probs5
   ),
-  modelo6 = list(
+  modelo_3 = list(
     alfabeto = alfabeto6,
     contexto = contexto6,
     probs = probs6
