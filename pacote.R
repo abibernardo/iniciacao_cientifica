@@ -552,9 +552,132 @@ ggplot(
 
 
 
+#################################################
+#  PROBABILIDADES EXATAS COMPARAÇÃO
 
-# Não gerar uma sequencia diferente para cada replicação 
+##################################################
+# COMPARAÇÃO MCMC x POSTERIORI EXATA
+##################################################
 
-# Comparar posterioris do modelo 4, priori uniforme 
-# Acresentar n = 20.000
-# Desenhar árvore 
+resultado_posteriori <- data.frame()
+
+# Priori que penaliza mais árvores profundas
+priori <- prior_raso
+
+for(nome_modelo in names(modelos)) {
+  
+  cat("Modelo:", nome_modelo, "\n")
+  
+  mod <- modelos[[nome_modelo]]
+  
+  arvore_verdadeira <- mod$contexto
+  
+  max_depth <- max(
+    sapply(
+      arvore_verdadeira,
+      function(x) {
+        length(
+          strsplit(
+            sub("^\\*\\.", "", x),
+            "\\."
+          )[[1]]
+        )
+      }
+    )
+  )
+  
+  for(amostras in lista_amostras) {
+    
+    cat("  Amostras:", amostras, "\n")
+    
+    # Gerar sequência
+    seq <- gerar_sequencia(
+      amostras = amostras,
+      alfabeto = mod$alfabeto,
+      contexto = mod$contexto,
+      probs = mod$probs
+    )
+    
+    for(alpha in lista_alphas) {
+      
+      cat("    Alpha:", alpha, "\n")
+      
+      # ----------------------------------------------
+      # 1. Posteriori via MCMC
+      # ----------------------------------------------
+      
+      posteriori_mcmc <- analisar_sequencia(
+        seq = seq,
+        alpha = alpha,
+        max_depth = max_depth,
+        priori = priori,
+        n_steps = 5000,
+        burnin = 1000
+      )
+      
+      # Probabilidade MCMC da árvore verdadeira
+      prob_mcmc <- posteriori_mcmc$df$prob[
+        sapply(
+          posteriori_mcmc$df$tree_contexts,
+          function(x) {
+            setequal(
+              distancia_arvores(
+                x,
+                arvore_verdadeira
+              ),
+              0
+            )
+          }
+        )
+      ]
+      
+      # Se a árvore verdadeira não apareceu
+      if(length(prob_mcmc) == 0) {
+        prob_mcmc <- 0
+      } else {
+        prob_mcmc <- sum(prob_mcmc)
+      }
+      
+      
+      # ----------------------------------------------
+      # 2. Posteriori exata
+      # ----------------------------------------------
+      
+      # Aqui entra a função do pacote
+      probabilidades <- activeTreeProbabilities(
+        seq,
+        alpha = alpha,
+        max_depth = max_depth,
+        context_weights = priori
+      )
+      
+      # Probabilidade da árvore verdadeira
+      prob_exata <- probabilidades[
+        names(probabilidades) %in%
+          paste(arvore_verdadeira, collapse = ",")
+      ]
+      
+      if(length(prob_exata) == 0) {
+        prob_exata <- 0
+      }
+      
+      
+      # ----------------------------------------------
+      # 3. Armazenar
+      # ----------------------------------------------
+      
+      resultado_posteriori <- rbind(
+        resultado_posteriori,
+        data.frame(
+          modelo = nome_modelo,
+          amostras = amostras,
+          alpha = alpha,
+          posteriori_mcmc = prob_mcmc,
+          posteriori_exata = prob_exata
+        )
+      )
+    }
+  }
+}
+
+resultado_posteriori
