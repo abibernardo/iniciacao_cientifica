@@ -549,22 +549,12 @@ ggplot(
   ) +
   facet_grid(modelo ~ priori)
 
-
-
-
-#################################################
-#  PROBABILIDADES EXATAS COMPARAÇÃO
-
 ##################################################
-# COMPARAÇÃO MCMC x POSTERIORI EXATA
+# COMPARAÇÃO DA MASSA POSTERIOR:
+# TOP 5 DO MCMC E CONJUNTO QUE SOMA 50% NO MCMC
 ##################################################
 
-
-# Priori que penaliza mais árvores profundas
-priori <- prior_raso
-
-# Inicializar dataframe antes do loop
-resultado_posteriori <- data.frame()
+resultado_comparacao <- data.frame()
 
 for(nome_modelo in names(modelos)) {
   
@@ -588,31 +578,36 @@ for(nome_modelo in names(modelos)) {
     )
   )
   
+  # Mesma sequência longa para todos os tamanhos
+  seq_completa <- gerar_sequencia(
+    amostras = max(lista_amostras),
+    alfabeto = mod$alfabeto,
+    contexto = mod$contexto,
+    probs = mod$probs,
+    seed = 321
+  )
+  
   for(amostras in lista_amostras) {
     
-    cat("  Amostras:", amostras, "\n")
-    
-    # Gerar sequência
-    seq <- gerar_sequencia(
-      amostras = amostras,
-      alfabeto = mod$alfabeto,
-      contexto = mod$contexto,
-      probs = mod$probs
-    )
+    seq <- seq_completa[1:amostras]
     
     for(nome_priori in names(lista_prioris)) {
-      
-      cat("    Priori:", nome_priori, "\n")
       
       priori <- lista_prioris[[nome_priori]]
       
       for(alpha in lista_alphas) {
         
-        cat("      Alpha:", alpha, "\n")
+        cat(
+          "Modelo:", nome_modelo,
+          "| Amostras:", amostras,
+          "| Priori:", nome_priori,
+          "| Alpha:", alpha,
+          "\n"
+        )
         
-        # ----------------------------------------------
-        # 1. Posteriori via MCMC
-        # ----------------------------------------------
+        # ==============================================
+        # MCMC
+        # ==============================================
         
         posteriori_mcmc <- analisar_sequencia(
           seq = seq,
@@ -623,39 +618,18 @@ for(nome_modelo in names(modelos)) {
           burnin = 1000
         )
         
-        # Identificar a árvore verdadeira no resultado do MCMC
-        indice_verdadeira <- sapply(
-          posteriori_mcmc$df$tree_contexts,
-          function(x) {
-            
-            x_contextos <- gsub("\\{|\\}", "", x)
-            x_contextos <- strsplit(x_contextos, ",")[[1]]
-            x_contextos <- trimws(x_contextos)
-            
-            setequal(
-              x_contextos,
-              arvore_verdadeira
-            )
-          }
-        )
+        df_mcmc <- posteriori_mcmc$df
         
-        prob_mcmc <- posteriori_mcmc$df$prob[
-          indice_verdadeira
+        # Ordenar por probabilidade MCMC
+        df_mcmc <- df_mcmc[
+          order(-df_mcmc$prob),
         ]
         
-        # Caso a árvore verdadeira não tenha sido visitada
-        if(length(prob_mcmc) == 0) {
-          prob_mcmc <- 0
-        } else {
-          prob_mcmc <- sum(prob_mcmc)
-        }
         
+        # ==============================================
+        # POSTERIORI EXATA
+        # ==============================================
         
-        # ----------------------------------------------
-        # 2. Posteriori exata
-        # ----------------------------------------------
-        
-        # Construir objeto Bayesiano
         bt <- baConTree$new(
           data = seq,
           maximalDepth = max_depth,
@@ -663,84 +637,199 @@ for(nome_modelo in names(modelos)) {
           priorWeights = priori
         )
         
-        # Ativar a árvore verdadeira
-        bt$activateFromContexts(
-          arvore_verdadeira
+        
+        # Função para calcular probabilidade exata
+        prob_exata_arvore <- function(tree_string) {
+          
+          contextos <- gsub(
+            "\\{|\\}",
+            "",
+            tree_string
+          )
+          
+          contextos <- strsplit(
+            contextos,
+            ","
+          )[[1]]
+          
+          contextos <- trimws(contextos)
+          
+          bt$activateFromContexts(contextos)
+          
+          bt$activeTreeProbabilities()$posterior
+        }
+        
+        
+        # ==============================================
+        # 1. TOP 5 DO MCMC
+        # ==============================================
+        
+        top5 <- head(
+          df_mcmc,
+          5
         )
         
-        # Obter probabilidades exatas
-        probabilidades_exatas <- bt$activeTreeProbabilities()
+        massa_mcmc_top5 <- sum(
+          top5$prob
+        )
         
-        # Probabilidade posterior exata
-        prob_exata <- probabilidades_exatas$posterior
+        massa_exata_top5 <- sum(
+          sapply(
+            top5$tree_contexts,
+            prob_exata_arvore
+          )
+        )
         
         
-        # ----------------------------------------------
-        # 3. Armazenar
-        # ----------------------------------------------
+        # ==============================================
+        # 2. CONJUNTO QUE ATINGE 50% NO MCMC
+        # ==============================================
         
-        resultado_posteriori <- rbind(
-          resultado_posteriori,
+        df_mcmc$prob_acumulada <- cumsum(
+          df_mcmc$prob
+        )
+        
+        indice_50 <- which(
+          df_mcmc$prob_acumulada >= 0.5
+        )[1]
+        
+        conjunto_50 <- df_mcmc[
+          1:indice_50,
+        ]
+        
+        massa_mcmc_50 <- sum(
+          conjunto_50$prob
+        )
+        
+        massa_exata_50 <- sum(
+          sapply(
+            conjunto_50$tree_contexts,
+            prob_exata_arvore
+          )
+        )
+        
+        
+        # ==============================================
+        # ARMAZENAR
+        # ==============================================
+        
+        resultado_comparacao <- rbind(
+          resultado_comparacao,
+          
           data.frame(
             modelo = nome_modelo,
             amostras = amostras,
             priori = nome_priori,
             alpha = alpha,
-            posteriori_mcmc = prob_mcmc,
-            posteriori_exata = prob_exata
+            
+            massa_mcmc_top5 = massa_mcmc_top5,
+            massa_exata_top5 = massa_exata_top5,
+            
+            massa_mcmc_50 = massa_mcmc_50,
+            massa_exata_50 = massa_exata_50,
+            
+            n_arvores_50 = nrow(conjunto_50)
           )
         )
-        
       }
     }
   }
 }
 
-
-resultado_posteriori
-
-
-############### Métricas
-
-resultado_posteriori$erro_absoluto <- abs(
-  resultado_posteriori$posteriori_mcmc -
-    resultado_posteriori$posteriori_exata
-)
-
-resultado_posteriori$erro_relativo <- ifelse(
-  resultado_posteriori$posteriori_exata > 0,
-  
-  abs(
-    resultado_posteriori$posteriori_mcmc -
-      resultado_posteriori$posteriori_exata
-  ) / resultado_posteriori$posteriori_exata,
-  
-  NA
-)
-
+resultado_comparacao
 
 library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+##################################################
+# 1. TOP 5: MCMC VS POSTERIORI EXATA
+##################################################
+
+dados_top5 <- resultado_comparacao %>%
+  select(
+    modelo,
+    amostras,
+    priori,
+    alpha,
+    massa_mcmc_top5,
+    massa_exata_top5
+  ) %>%
+  pivot_longer(
+    cols = c(
+      massa_mcmc_top5,
+      massa_exata_top5
+    ),
+    names_to = "metodo",
+    values_to = "massa"
+  )
 
 ggplot(
-  resultado_posteriori,
+  dados_top5,
   aes(
-    x = posteriori_exata,
-    y = posteriori_mcmc,
-    color = factor(alpha)
+    x = factor(amostras),
+    y = massa,
+    fill = metodo
   )
 ) +
-  geom_point(size = 3) +
-  geom_abline(
-    slope = 1,
-    intercept = 0,
-    linetype = "dashed"
+  geom_bar(
+    stat = "identity",
+    position = "dodge"
   ) +
   facet_grid(
-    modelo ~ priori
+    modelo ~ priori + alpha
   ) +
   theme_minimal() +
   labs(
-    x = "Probabilidade posterior exata",
-    y = "Probabilidade posterior estimada pelo MCMC",
-    color = expression(alpha)
+    title = "Massa posterior das Top 5 árvores do MCMC",
+    x = "Número de amostras",
+    y = "Massa posterior",
+    fill = "Probabilidade"
   )
+
+
+##################################################
+# 2. CONJUNTO QUE ACUMULA 50% NO MCMC
+##################################################
+
+dados_50 <- resultado_comparacao %>%
+  select(
+    modelo,
+    amostras,
+    priori,
+    alpha,
+    massa_mcmc_50,
+    massa_exata_50
+  ) %>%
+  pivot_longer(
+    cols = c(
+      massa_mcmc_50,
+      massa_exata_50
+    ),
+    names_to = "metodo",
+    values_to = "massa"
+  )
+
+ggplot(
+  dados_50,
+  aes(
+    x = factor(amostras),
+    y = massa,
+    fill = metodo
+  )
+) +
+  geom_bar(
+    stat = "identity",
+    position = "dodge"
+  ) +
+  facet_grid(
+    modelo ~ priori + alpha
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Massa posterior exata do conjunto que acumula 50% no MCMC",
+    x = "Número de amostras",
+    y = "Massa posterior",
+    fill = "Probabilidade"
+  )
+
