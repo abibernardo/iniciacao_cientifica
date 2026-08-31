@@ -747,6 +747,7 @@ library(tidyr)
 ##################################################
 
 dados_top5 <- resultado_comparacao %>%
+  filter(alpha == 0.5) %>%
   select(
     modelo,
     amostras,
@@ -777,7 +778,7 @@ ggplot(
     position = "dodge"
   ) +
   facet_grid(
-    modelo ~ priori + alpha
+    modelo ~ priori
   ) +
   theme_minimal() +
   labs(
@@ -793,6 +794,7 @@ ggplot(
 ##################################################
 
 dados_50 <- resultado_comparacao %>%
+  filter(alpha == 0.5) %>%
   select(
     modelo,
     amostras,
@@ -823,7 +825,7 @@ ggplot(
     position = "dodge"
   ) +
   facet_grid(
-    modelo ~ priori + alpha
+    modelo ~ priori
   ) +
   theme_minimal() +
   labs(
@@ -832,4 +834,3 @@ ggplot(
     y = "Massa posterior",
     fill = "Probabilidade"
   )
-
